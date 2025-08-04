@@ -4,26 +4,35 @@
 \usepackage{fancyhdr}
 \usepackage{parskip}
 
+\setcounter{secnumdepth}{0} % disable numbering if you like
+
 \pagestyle{fancy}
 \fancyhf{}
-\lhead{\VAR{title}}
+\lhead{HIZZA STATISTICS}
 \rhead{\VAR{date}}
 \cfoot{\thepage}
 
 \begin{document}
 
-\section*{\VAR{section1_title}}
-\VAR{section1_text}
+\section{Claims and Gives}
+There was a total of \VAR{results['TotalClaims']} claims and \VAR{results['InitialClaims']} new users! (Can add biggest claim amount here)
 
-\begin{center}
-    \includegraphics[width=0.9\columnwidth]{\VAR{plot1}}
-\end{center}
+There was a total of \VAR{results['TotalCoinGives']} coin giving, with the largest give amounting to \VAR{results['BiggestCoinGive']}!
 
-\section*{\VAR{section2_title}}
-\VAR{section2_text}
+\section{Challenges}
+So many challenges! There was a total of \VAR{results['TotalChallenges']}. 
 
-\begin{center}
-    \includegraphics[width=0.9\columnwidth]{\VAR{plot2}}
-\end{center}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{\VAR{most_played_hands_plot}}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\columnwidth]{\VAR{most_wins_hands_plot}}
+\end{figure}
+
+\section{Roulette}
+There were \VAR{results['TotalRouletteWagers']} wagers. The biggest wager was \VAR{results['BiggestRouletteWager']} and the biggest win was \VAR{results['BiggestRouletteWin']} HizzaCoin!
 
 \end{document}

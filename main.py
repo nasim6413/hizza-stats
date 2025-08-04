@@ -1,6 +1,6 @@
 import json
 import pandas as pd
-import matplotlib
+import matplotlib.pyplot as plt
 import os
 import jinja2
 import subprocess
@@ -78,6 +78,7 @@ results = {
 }
 
 # DATE FILTER TODO: make this editable
+date = 'July 2025'
 challenges_df = challenges_df[(challenges_df['ChallengeDate'].dt.year == 2025) & (challenges_df['ChallengeDate'].dt.month == 7)]
 
 transactions_df = transactions_df[(transactions_df['TransactionDate'].dt.year == 2025) & (transactions_df['TransactionDate'].dt.month == 7)]
@@ -124,6 +125,7 @@ for i in range(1,4):
 # Transaction amounts
 results['BiggestCoinGive'] = transactions_df.loc[transactions_df['TransactionType'] == 3]['Amount'].max()
 
+#TODO: top 5
 results['BiggestRouletteWager'] = transactions_df.loc[
     (transactions_df['TransactionType'] == 4)
     & (transactions_df['ReceiverDiscordId'] == 0)]['Amount'].max()
@@ -135,38 +137,55 @@ results['BiggestRouletteWin'] = transactions_df.loc[
 print(results)
 
 ## CREATING PLOTS
+# Custom colors
+colours = ['#9c399e','#c73c5a','#e8af25']
 
-## WRITING TO LATEX TODO: fix thissss
-# ## Generating Jinja env
-# latex_jinja_env = jinja2.Environment(
-#     block_start_string = '\BLOCK{',    # instead of {% 
-#     block_end_string = '}',            # instead of %}
-#     variable_start_string = '\VAR{',   # instead of {{
-#     variable_end_string = '}',         # instead of }}
-#     comment_start_string = '\#{',      # instead of {#
-#     comment_end_string = '}',          # instead of #}
-#     line_statement_prefix = '%%',      # lines starting with %% are statements
-#     line_comment_prefix = '%#',        # lines starting with %# are comments
-# 	trim_blocks = True,
-# 	autoescape = False,
-# 	loader = jinja2.FileSystemLoader(os.path.abspath('.'))
-# )
+# Most played hands
+labels = list(results['MostPlayedHand'].keys())
+labels = [CHALLENGE_HANDS[i] for i in labels]
+sizes = list(results['MostPlayedHand'].values())
 
-# ## Creating report
-# template = latex_jinja_env.get_template('template.tex')
-# rendered = template.render(
-#     title='Fun Report',
-#     section1_title='First Section',
-#     section1_text='Here is the first section content.',
-#     plot1='plot1.png',
-#     section2_title='Second Section',
-#     section2_text='Second section content.',
-#     plot2='plot2.png'
-# )
+plt.figure(figsize=(4,4))
+plt.pie(sizes, labels=labels, colors=colours, autopct='%1.1f%%', startangle=90)
+plt.title('Most Played Hands')
+plt.savefig('plots/mostplayedhands.png')
 
-# # Write to .tex
-# with open('output_rendered.tex', 'w') as f:
-#     f.write(rendered)
 
-# # Compile to PDF using lualatex
-# subprocess.run(['lualatex', 'output_rendered.tex'])
+# Most winning hands
+labels = list(results['MostWinsHand'].keys())
+labels = [CHALLENGE_HANDS[i] for i in labels]
+sizes = list(results['MostWinsHand'].values())
+
+plt.figure(figsize=(4,4))
+plt.pie(sizes, labels=labels, colors=colours, autopct='%1.1f%%', startangle=90)
+plt.title('Winning Hands')
+plt.savefig('plots/mostwinshands.png')
+
+## WRITING TO LATEX
+## Generating Jinja env
+latex_jinja_env = jinja2.Environment(
+    block_start_string = '\BLOCK{',    # instead of {% 
+    block_end_string = '}',            # instead of %}
+    variable_start_string = '\VAR{',   # instead of {{
+    variable_end_string = '}',         # instead of }}
+    comment_start_string = '\#{',      # instead of {#
+    comment_end_string = '}',          # instead of #}
+    line_statement_prefix = '%%',      # lines starting with %% are statements
+    line_comment_prefix = '%#',        # lines starting with %# are comments
+	trim_blocks = True,
+	autoescape = False,
+	loader = jinja2.FileSystemLoader(os.path.abspath('.'))
+)
+
+# Creating report
+template = latex_jinja_env.get_template('template.tex')
+rendered = template.render(
+    date=date,
+    results=results,
+    most_played_hands_plot='plots/mostplayedhands.png',
+    most_wins_hands_plot='plots/mostwinshands.png'
+)
+
+with open('output.tex', 'w') as f:
+    f.write(rendered)
+subprocess.run(['lualatex', 'output.tex'])

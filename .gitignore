@@ -1,6 +1,7 @@
 __pycache__/
 data/
 plots/
+output.tex
 *.aux
 *.fdb_latexmk
 *.fls
