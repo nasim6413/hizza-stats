@@ -56,6 +56,7 @@ transactions_df['SenderDiscordId'] = transactions_df['SenderDiscordId'].astype(i
 ## EXTRACTING RESULTS
 results = {
     'TotalClaims' : 0,
+    'BiggestClaim' : 0,
     'InitialClaims' : 0,
     'TotalChallenges' : 0,
     'MostPlayedHand' : {
@@ -85,10 +86,9 @@ transactions_df = transactions_df[(transactions_df['TransactionDate'].dt.year ==
 
 # Transaction types
 transaction_types = transactions_df.groupby(['TransactionType']).size()
+
 results['TotalClaims'] = transaction_types.loc[1]
-
 # results['InitialClaims'] = transactions_df.groupby(['TransactionType']).size().loc[0]
-
 results['TotalCoinGives'] = transaction_types.loc[3]
 results['TotalRouletteWagers'] = transaction_types.loc[4]
 
@@ -125,14 +125,16 @@ for i in range(1,4):
 # Transaction amounts
 results['BiggestCoinGive'] = transactions_df.loc[transactions_df['TransactionType'] == 3]['Amount'].max()
 
-#TODO: top 5
-results['BiggestRouletteWager'] = transactions_df.loc[
+results['Top5RouletteWagers'] = transactions_df.loc[
     (transactions_df['TransactionType'] == 4)
-    & (transactions_df['ReceiverDiscordId'] == 0)]['Amount'].max()
+    & (transactions_df['ReceiverDiscordId'] == 0)]['Amount'].nlargest(5).tolist()
 
-results['BiggestRouletteWin'] = transactions_df.loc[
+results['Top5RouletteWins'] = transactions_df.loc[
     (transactions_df['TransactionType'] == 4)
-    & (transactions_df['SenderDiscordId'] == 0)]['Amount'].max()
+    & (transactions_df['SenderDiscordId'] == 0)]['Amount'].nlargest(5).tolist()
+
+results['BiggestRouletteWager'] = max(results['Top5RouletteWagers'])
+results['BiggestRouletteWin'] = max(results['Top5RouletteWins'])
 
 print(results)
 
@@ -146,10 +148,10 @@ labels = [CHALLENGE_HANDS[i] for i in labels]
 sizes = list(results['MostPlayedHand'].values())
 
 plt.figure(figsize=(4,4))
-plt.pie(sizes, labels=labels, colors=colours, autopct='%1.1f%%', startangle=90)
+plt.pie(sizes, labels=labels, colors=colours, autopct='%1.0f%%', startangle=90)
 plt.title('Most Played Hands')
+plt.tight_layout()
 plt.savefig('plots/mostplayedhands.png')
-
 
 # Most winning hands
 labels = list(results['MostWinsHand'].keys())
@@ -157,9 +159,46 @@ labels = [CHALLENGE_HANDS[i] for i in labels]
 sizes = list(results['MostWinsHand'].values())
 
 plt.figure(figsize=(4,4))
-plt.pie(sizes, labels=labels, colors=colours, autopct='%1.1f%%', startangle=90)
+plt.pie(sizes, labels=labels, colors=colours, autopct='%1.0f%%', startangle=90)
 plt.title('Winning Hands')
+plt.tight_layout()
 plt.savefig('plots/mostwinshands.png')
+
+top5 = ['1st', '2nd', '3rd', '4th', '5th']
+
+# Top 5 wagers
+plt.figure(figsize=(4,4))
+bars = plt.bar(top5, results['Top5RouletteWagers'], color=colours[0])
+plt.title('Top 5 Roulette Wagers')
+
+# Add value labels on top
+for bar, amount in zip(bars, results['Top5RouletteWagers']):
+    plt.text(
+        bar.get_x() + bar.get_width()/2,
+        bar.get_height(),
+        f'{amount:,}',
+        ha='center', va='bottom', fontsize=8
+    )
+    
+plt.tight_layout()
+plt.savefig('plots/top5wagers.png')
+
+# Top 5 wins
+plt.figure(figsize=(4,4))
+bars = plt.bar(top5, results['Top5RouletteWins'], color=colours[0])
+plt.title('Top 5 Roulette Wins')
+
+# Add value labels on top
+for bar, amount in zip(bars, results['Top5RouletteWins']):
+    plt.text(
+        bar.get_x() + bar.get_width()/2,
+        bar.get_height(),
+        f'{amount:,}',
+        ha='center', va='bottom', fontsize=8
+    )
+
+plt.tight_layout()
+plt.savefig('plots/top5wins.png')
 
 ## WRITING TO LATEX
 ## Generating Jinja env
@@ -183,7 +222,9 @@ rendered = template.render(
     date=date,
     results=results,
     most_played_hands_plot='plots/mostplayedhands.png',
-    most_wins_hands_plot='plots/mostwinshands.png'
+    most_wins_hands_plot='plots/mostwinshands.png',
+    top_5_wagers_plot = 'plots/top5wagers.png',
+    top_5_wins_plot = 'plots/top5wins.png'
 )
 
 with open('output.tex', 'w') as f:
