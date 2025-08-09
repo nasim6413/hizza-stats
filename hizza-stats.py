@@ -1,6 +1,8 @@
 import os
+import requests
 import discord
 from dotenv import load_dotenv
+from user_stats import *
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
@@ -13,13 +15,35 @@ async def on_ready():
 ### Get own statistics
 @bot.slash_command(description='Learn more about your Hizza activity!')
 async def stats(ctx):
+
+    avatar_url = ctx.user.avatar.url
+    user_name = ctx.user.name
+
     embed = discord.Embed(
-            title="My Amazing Embed",
-            description="Embeds are super easy, barely an inconvenience.",
+            title=f'Hizza Stats: {user_name}',
+            description='Fun little intro here?',
             color=discord.Colour.blurple()
             )
+    
+    embed.set_thumbnail(url=avatar_url)
+    
 
-    await ctx.respond("Hello! Here's a cool embed.", embed=embed)
+    embed.add_field(
+        name="HizzaCoin",
+        value="* Total claims: ?\n* Biggest claim: ?",
+        inline=False
+    )
+    embed.add_field(
+        name="Challenge",
+        value="* Total challenges: ?\n* Challenged ? users\n* Challenged by ? users\n* Favourite hand: ?",
+        inline=False
+    )
+    embed.add_field(
+        name="Roulette",
+        value="* Biggest wager: ?\n* Biggest win: ?\n* Biggest loss: ?",
+        inline=False
+    )
+    await ctx.respond(embed=embed)
 
 ### Monthly Hizza report
 
