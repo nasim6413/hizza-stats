@@ -1,64 +1,64 @@
-import json
-import pandas as pd
-import matplotlib.pyplot as plt
-from enums import *
+# import json
+# import pandas as pd
+# import matplotlib.pyplot as plt
+# from enums import *
 
-def import_data(): #TODO: add date filter: currently set to 7-2025
-    ## IMPORTING DATA
-    print('Importing data...')
-    with open('data/HizzaCoin.Accounts.json', 'r') as f:
-        accounts = json.load(f)
+# def import_data(): #TODO: add date filter: currently set to 7-2025
+#     ## IMPORTING DATA
+#     print('Importing data...')
+#     with open('data/HizzaCoin.Accounts.json', 'r') as f:
+#         accounts = json.load(f)
         
-    with open('data/HizzaCoin.Challenges.json', 'r') as f:
-        challenges = json.load(f)
+#     with open('data/HizzaCoin.Challenges.json', 'r') as f:
+#         challenges = json.load(f)
         
-    with open('data/HizzaCoin.Transactions.json', 'r') as f:
-        transactions = json.load(f)
+#     with open('data/HizzaCoin.Transactions.json', 'r') as f:
+#         transactions = json.load(f)
     
-    ## CLEANING   
-    # Accounts
-    for i in accounts:
-        i['AccountId'] = i['_id']['$oid']
-        del i['_id']
+#     ## CLEANING   
+#     # Accounts
+#     for i in accounts:
+#         i['AccountId'] = i['_id']['$oid']
+#         del i['_id']
         
-        i['LastClaimDate'] = i['LastClaimDate']['$date']
+#         i['LastClaimDate'] = i['LastClaimDate']['$date']
         
-    # Challenges
-    for i in challenges:
-        i['ChallengeId'] = i['_id']['$oid']
-        del i['_id']
+#     # Challenges
+#     for i in challenges:
+#         i['ChallengeId'] = i['_id']['$oid']
+#         del i['_id']
             
-        i['ChallengeDate'] = i['Date']['$date']
-        del i['Date']
+#         i['ChallengeDate'] = i['Date']['$date']
+#         del i['Date']
         
-    # Transactions
-    for i in transactions:
-        i['TransactionId'] = i['_id']['$oid']
-        del i['_id']
+#     # Transactions
+#     for i in transactions:
+#         i['TransactionId'] = i['_id']['$oid']
+#         del i['_id']
         
-        i['TransactionDate'] = i['Date']['$date']
-        del i['Date']
+#         i['TransactionDate'] = i['Date']['$date']
+#         del i['Date']
 
-    # Convert to DataFrame
-    accounts_df = pd.DataFrame.from_dict(accounts)
-    challenges_df = pd.DataFrame.from_dict(challenges)
-    transactions_df = pd.DataFrame.from_dict(transactions).dropna(ignore_index=True)
+#     # Convert to DataFrame
+#     accounts_df = pd.DataFrame.from_dict(accounts)
+#     challenges_df = pd.DataFrame.from_dict(challenges)
+#     transactions_df = pd.DataFrame.from_dict(transactions).dropna(ignore_index=True)
 
-    # Fixing datetime
-    accounts_df['LastClaimDate'] = pd.to_datetime(accounts_df['LastClaimDate'])
-    challenges_df['ChallengeDate'] = pd.to_datetime(challenges_df['ChallengeDate'])
-    transactions_df['TransactionDate'] = pd.to_datetime(transactions_df['TransactionDate'])
+#     # Fixing datetime
+#     accounts_df['LastClaimDate'] = pd.to_datetime(accounts_df['LastClaimDate'])
+#     challenges_df['ChallengeDate'] = pd.to_datetime(challenges_df['ChallengeDate'])
+#     transactions_df['TransactionDate'] = pd.to_datetime(transactions_df['TransactionDate'])
 
-    # Typecasting
-    transactions_df['ReceiverDiscordId'] = transactions_df['ReceiverDiscordId'].astype(int)
-    transactions_df['SenderDiscordId'] = transactions_df['SenderDiscordId'].astype(int)
+#     # Typecasting
+#     transactions_df['ReceiverDiscordId'] = transactions_df['ReceiverDiscordId'].astype(int)
+#     transactions_df['SenderDiscordId'] = transactions_df['SenderDiscordId'].astype(int)
 
-    # DATE FILTER
-    challenges_df = challenges_df[(challenges_df['ChallengeDate'].dt.year == 2025) & (challenges_df['ChallengeDate'].dt.month == 7)]
+#     # DATE FILTER
+#     challenges_df = challenges_df[(challenges_df['ChallengeDate'].dt.year == 2025) & (challenges_df['ChallengeDate'].dt.month == 7)]
 
-    transactions_df = transactions_df[(transactions_df['TransactionDate'].dt.year == 2025) & (transactions_df['TransactionDate'].dt.month == 7)]
+#     transactions_df = transactions_df[(transactions_df['TransactionDate'].dt.year == 2025) & (transactions_df['TransactionDate'].dt.month == 7)]
 
-    return accounts_df, challenges_df, transactions_df
+#     return accounts_df, challenges_df, transactions_df
 
 
 # ## EXTRACTING RESULTS
