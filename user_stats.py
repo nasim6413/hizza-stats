@@ -12,6 +12,7 @@ class UserStats:
         self.challenge_results = {'TotalChallenges' : 0,
             'TotalChallenger' : 0,
             'TotalChallenged' : 0,
+            'FavouriteHand' : 0,
             'FavouriteHands' :
                         {1 : 0,
                         2 : 0,
@@ -75,7 +76,11 @@ class UserStats:
                     
                     # Append hands
                     self.challenge_results['FavouriteHands'][item['ChallengedHand']] += 1
-                        
+        
+        # Finding favourite hand
+        self.challenge_results['FavouriteHand'] = max(self.challenge_results['FavouriteHands'], key=self.challenge_results['FavouriteHands'].get)
+        self.challenge_results['FavouriteHand'] = CHALLENGE_HANDS[self.challenge_results['FavouriteHand']]
+                
         return
 
     def get_roulette_results(self):

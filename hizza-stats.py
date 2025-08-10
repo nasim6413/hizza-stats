@@ -30,17 +30,17 @@ async def stats(ctx):
 
     embed.add_field(
         name='HizzaCoin',
-        value=f'* Total claims: **{user_stats.coin_results['TotalClaims']}** \n* Biggest claim: **{user_stats.coin_results['BiggestClaim']}**',
+        value=f"* Total claims: **{user_stats.coin_results['TotalClaims']}** \n* Biggest claim: **{user_stats.coin_results['BiggestClaim']}**",
         inline=False
     )
     embed.add_field(
         name='Challenge',
-        value=f'* Total challenges: **{user_stats.challenge_results['TotalChallenges']}**\n* Challenged **{user_stats.challenge_results['TotalChallenger']}** users\n* Challenged by **{user_stats.challenge_results['TotalChallenged']}** users\n* Favourite hand: ?',
+        value=f"* Total challenges: **{user_stats.challenge_results['TotalChallenges']}**\n* Challenged **{user_stats.challenge_results['TotalChallenger']}** users\n* Challenged by **{user_stats.challenge_results['TotalChallenged']}** users\n* Favourite hand: **{user_stats.challenge_results['FavouriteHand']}**",
         inline=False
     )
     embed.add_field(
         name='Roulette',
-        value=f'* **{user_stats.roulette_results['WagerCount']}** wagers\n* Biggest win: **{user_stats.roulette_results['BiggestWin']}**\n* Biggest loss: **{user_stats.roulette_results['BiggestLoss']}**',
+        value=f"* **{user_stats.roulette_results['WagerCount']}** wagers\n* Biggest win: **{user_stats.roulette_results['BiggestWin']}**\n* Biggest loss: **{user_stats.roulette_results['BiggestLoss']}**",
         inline=False
     )
     
