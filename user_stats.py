@@ -7,16 +7,31 @@ class UserStats:
         self.transactions = False
         self.challenges = False
         
-        self.coin_results = {'TotalClaims' : 0,
-                             'BiggestClaim' : 0}
-        self.challenge_results = {'TotalChallenges' : 0,
+        self.coin_results = {
+            'TotalClaims' : 0,
+            'BiggestClaim' : 0,
+            'TotalGives' : 0,
+            'TotalGiveAmount' : 0,
+            'TotalGiven' : 0,
+            'TotalGivenAmount' : 0,
+            'BiggestGive' : 0,
+            'BiggestGiveTo' : '',
+            'BiggestGiven' : 0,
+            'BiggestGivenFrom' : 0
+            }
+        
+        self.challenge_results = {
+            'TotalChallenges' : 0,
             'TotalChallenger' : 0,
             'TotalChallenged' : 0,
             'FavouriteHand' : 0,
-            'FavouriteHands' :
-                        {1 : 0,
-                        2 : 0,
-                        3 : 0}}
+            'FavouriteHands' : {
+                1 : 0,
+                2 : 0,
+                3 : 0
+                }
+            }
+        
         self.roulette_results = {
             'WagerCount' : 0,
             'BiggestWin' : 0,
@@ -58,6 +73,26 @@ class UserStats:
                 if item['Amount'] > self.coin_results['BiggestClaim']:
                     self.coin_results['BiggestClaim'] = item['Amount']
         
+            if item['TransactionType'] == 3:
+                
+                # Coin gives
+                if item['SenderDiscordId'] == self.user_id:
+                    self.coin_results['TotalGives'] += 1
+                    self.coin_results['TotalGiveAmount'] += item['Amount']
+                    
+                    if item['Amount'] > self.coin_results['BiggestGive']:
+                        self.coin_results['BiggestGive'] = item['Amount']
+                        self.coin_results['BiggestGiveTo'] = item['ReceiverDiscordId']
+                    
+                # Coin receives
+                if item['ReceiverDiscordId'] == self.user_id:
+                    self.coin_results['TotalGiven'] += 1
+                    self.coin_results['TotalGivenAmount'] += item['Amount']
+                    
+                    if item['Amount'] > self.coin_results['BiggestGiven']:
+                        self.coin_results['BiggestGiven'] = item['Amount']
+                        self.coin_results['BiggestGivenFrom'] = item['SenderDiscordId']
+                
         return
 
     def get_challenge_results(self):       
