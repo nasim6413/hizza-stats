@@ -29,8 +29,10 @@ async def stats(ctx, user: Optional[discord.Member]):
     biggest_given_from = user_stats.coin_results['BiggestGivenFrom']
     
     
-    biggest_give_to = await bot.fetch_user(int(biggest_give_to)) if biggest_give_to else 'None'
-    biggest_given_from = await bot.fetch_user(int(biggest_given_from)) if biggest_given_from else 'None'
+    biggest_give_to = await bot.fetch_user(int(biggest_give_to)) if biggest_give_to else None
+    biggest_give_to = biggest_give_to.name if biggest_give_to else 'Nobody'
+    biggest_given_from = await bot.fetch_user(int(biggest_given_from)) if biggest_given_from else None
+    biggest_given_from = biggest_given_from.name if biggest_given_from else 'Nobody'
 
     embed = discord.Embed(
             title=f'Hizza Stats: {user_name}',
@@ -46,9 +48,9 @@ async def stats(ctx, user: Optional[discord.Member]):
             f"* Total claims: **{user_stats.coin_results['TotalClaims']}**\n"
             f"* Biggest claim: **{user_stats.coin_results['BiggestClaim']}**\n"
             f"* Coin given: **{user_stats.coin_results['TotalGiveAmount']}** coins\n"
-            f"* Biggest give: **{user_stats.coin_results['BiggestGive']}** coins to **{biggest_give_to.name}**\n"
+            f"* Biggest give: **{user_stats.coin_results['BiggestGive']}** coins to **{biggest_give_to}**\n"
             f"* Coin received: **{user_stats.coin_results['TotalGivenAmount']}** coins\n"
-            f"* Biggest received: **{user_stats.coin_results['BiggestGiven']}** coins from **{biggest_given_from.name}**"
+            f"* Biggest received: **{user_stats.coin_results['BiggestGiven']}** coins from **{biggest_given_from}**"
 
         ),
         inline=False
