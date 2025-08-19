@@ -35,7 +35,9 @@ class UserStats:
         self.roulette_results = {
             'WagerCount' : 0,
             'BiggestWin' : 0,
-            'BiggestLoss' : 0
+            'BiggestLoss' : 0,
+            'TotalWon' : 0,
+            'TotalLost' : 0
             }
 
         self.get_user_stats()
@@ -119,7 +121,7 @@ class UserStats:
         return
 
     def get_roulette_results(self):
-        previous_wager = 0 # Flag for tracking losses
+        previous_transaction = None
         
         for item in self.transactions:
             if item['TransactionType'] == 4:
@@ -127,23 +129,40 @@ class UserStats:
                 # Either a wager or a loss
                 if item['SenderDiscordId'] == self.user_id: 
                     
-                    # Checks if previous wager was a loss
-                    if previous_wager > self.roulette_results['BiggestLoss']:
-                        self.roulette_results['BiggestLoss'] = previous_wager
-                    
-                    # Updates previous_wager to current wager
-                    previous_wager = item['Amount']
-                    
+                    # Loss
+                    if previous_transaction and previous_transaction['SenderDiscordId'] == self.user_id:
+
+                        if previous_transaction['Amount'] > self.roulette_results['BiggestLoss']:
+                            self.roulette_results['BiggestLoss'] = previous_transaction['Amount']
+                
+                        self.roulette_results['TotalLost'] += previous_transaction['Amount']
+                        
                     # Updates wager count
                     self.roulette_results['WagerCount'] += 1
                     
+                # Wins
                 if item['ReceiverDiscordId'] == self.user_id:   
                                 
                     # Sets new biggest win
                     if item['Amount'] > self.roulette_results['BiggestWin']:
                         self.roulette_results['BiggestWin'] = item['Amount']
+                       
+                    # Updates total won 
+                    self.roulette_results['TotalWon'] += item['Amount']
                     
-                    # Update flag
-                    previous_wager = 0
+                # Updates flag
+                previous_transaction = item
+                
+        # Checks final transaction for loss
+        final_transaction = self.transactions[-1]
+        
+        if final_transaction['SenderDiscordId'] == self.user_id:
+            if final_transaction['Amount'] > self.roulette_results['BiggestLoss']:
+                self.roulette_results['BiggestLoss'] = final_transaction['Amount']
+                
+            self.roulette_results['TotalLost'] += final_transaction['Amount']
+                        
+            # Updates wager count
+            self.roulette_results['WagerCount'] += 1 
                     
         return
