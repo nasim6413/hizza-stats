@@ -1,5 +1,5 @@
 import requests
-from enums import *
+from utils.enums import *
 
 class UserStats:
     def __init__(self, user_id):

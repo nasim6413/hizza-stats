@@ -1,7 +1,20 @@
 # import json
 # import pandas as pd
 # import matplotlib.pyplot as plt
-# from enums import *
+import requests
+from enums import *
+
+# class HizzaReport:
+#     def __init__(self, date):
+#         self.date = date
+#         self.transactions = False
+#         self.challenges = False
+        
+#     def get_hizza_stats(self):
+#         self.transactions = requests.get('http://localhost:8080/api/transactions').json()
+#         self.challenges = requests.get('http://localhost:8080/api/challenges').json()
+        
+#         return
 
 # def import_data(): #TODO: add date filter: currently set to 7-2025
 #     ## IMPORTING DATA
@@ -138,66 +151,3 @@
 
 # results['BiggestRouletteWager'] = max(results['Top5RouletteWagers'])
 # results['BiggestRouletteWin'] = max(results['Top5RouletteWins'])
-
-# ## CREATING PLOTS
-# print('Creating plots...')
-# # Custom colors
-# colours = ['#9c399e','#c73c5a','#e8af25']
-
-# # Most played hands
-# labels = list(results['MostPlayedHand'].keys())
-# labels = [CHALLENGE_HANDS[i] for i in labels]
-# sizes = list(results['MostPlayedHand'].values())
-
-# plt.figure(figsize=(4,4))
-# plt.pie(sizes, labels=labels, colors=colours, autopct='%1.0f%%', startangle=90)
-# plt.title('Most Played Hands')
-# plt.tight_layout()
-# plt.savefig('plots/mostplayedhands.png')
-
-# # Most winning hands
-# labels = list(results['MostWinsHand'].keys())
-# labels = [CHALLENGE_HANDS[i] for i in labels]
-# sizes = list(results['MostWinsHand'].values())
-
-# plt.figure(figsize=(4,4))
-# plt.pie(sizes, labels=labels, colors=colours, autopct='%1.0f%%', startangle=90)
-# plt.title('Winning Hands')
-# plt.tight_layout()
-# plt.savefig('plots/mostwinshands.png')
-
-# top5 = ['1st', '2nd', '3rd', '4th', '5th']
-
-# # Top 5 wagers
-# plt.figure(figsize=(4,4))
-# bars = plt.bar(top5, results['Top5RouletteWagers'], color=colours[0])
-# plt.title('Top 5 Roulette Wagers')
-
-# # Add value labels on top
-# for bar, amount in zip(bars, results['Top5RouletteWagers']):
-#     plt.text(
-#         bar.get_x() + bar.get_width()/2,
-#         bar.get_height(),
-#         f'{amount:,}',
-#         ha='center', va='bottom', fontsize=8
-#     )
-    
-# plt.tight_layout()
-# plt.savefig('plots/top5wagers.png')
-
-# # Top 5 wins
-# plt.figure(figsize=(4,4))
-# bars = plt.bar(top5, results['Top5RouletteWins'], color=colours[0])
-# plt.title('Top 5 Roulette Wins')
-
-# # Add value labels on top
-# for bar, amount in zip(bars, results['Top5RouletteWins']):
-#     plt.text(
-#         bar.get_x() + bar.get_width()/2,
-#         bar.get_height(),
-#         f'{amount:,}',
-#         ha='center', va='bottom', fontsize=8
-#     )
-
-# plt.tight_layout()
-# plt.savefig('plots/top5wins.png')
