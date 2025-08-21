@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from typing import Optional
 from utils.users import UserStats
+from utils.helpers import fetch_username
 
 class UserCog(commands.Cog):
 
@@ -20,15 +21,9 @@ class UserCog(commands.Cog):
         user_stats = UserStats(str(user.id))
         
         # Fetching usernames from user_id
-        biggest_give_to = user_stats.coin_results['BiggestGiveTo']
-        biggest_given_from = user_stats.coin_results['BiggestGivenFrom']
+        biggest_give_to = await fetch_username(self.bot, user_stats.coin_results['BiggestGiveTo'])
+        biggest_given_from = await fetch_username(self.bot, user_stats.coin_results['BiggestGivenFrom'])
         
-        
-        biggest_give_to = await self.bot.fetch_user(int(biggest_give_to)) if biggest_give_to else None
-        biggest_give_to = biggest_give_to.name if biggest_give_to else 'Nobody'
-        biggest_given_from = await self.bot.fetch_user(int(biggest_given_from)) if biggest_given_from else None
-        biggest_given_from = biggest_given_from.name if biggest_given_from else 'Nobody'
-
         # Creating embed
         embed = discord.Embed(
                 title=f'Hizza Stats: {user_name}',
@@ -69,7 +64,7 @@ class UserCog(commands.Cog):
                 f"* **{user_stats.roulette_results['WagerCount']}** wagers\n"
                 f"* Total won: **{user_stats.roulette_results['TotalWon']}** coins\n"
                 f"* Biggest win: **{user_stats.roulette_results['BiggestWin']}** coins\n"
-                f"* Total lost: **{user_stats.roulette_results['TotalLost']} ** coins\n"
+                f"* Total lost: **{user_stats.roulette_results['TotalLost']}** coins\n"
                 f"* Biggest loss: **{user_stats.roulette_results['BiggestLoss']}** coins"
             ),
             inline=False

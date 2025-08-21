@@ -1,153 +1,129 @@
-# import json
-# import pandas as pd
-# import matplotlib.pyplot as plt
 import requests
-from enums import *
+from datetime import datetime
+from utils.enums import *
 
-# class HizzaReport:
-#     def __init__(self, date):
-#         self.date = date
-#         self.transactions = False
-#         self.challenges = False
+class HizzaReport:
+    def __init__(self):
+        # self.date = False # Set date filter
+        # self.months = []
+        self.transactions = False
+        self.challenges = False
         
-#     def get_hizza_stats(self):
-#         self.transactions = requests.get('http://localhost:8080/api/transactions').json()
-#         self.challenges = requests.get('http://localhost:8080/api/challenges').json()
+        self.coin_results = {
+            'TotalClaims' : 0,
+            'TotalClaimed' : 0,
+            'TotalClaimers' : [],
+            'BiggestClaim' : 0,
+            'BiggestClaimer' : '',
+            'InitialClaims' : 0,
+            'TotalCoinGives' : 0,
+            'TotalCoinGiven' : 0,
+            'BiggestCoinGive' : 0,
+            'BiggestCoinGiver' : '',
+            'BiggestCoinReceiver' : ''
+            }
         
-#         return
-
-# def import_data(): #TODO: add date filter: currently set to 7-2025
-#     ## IMPORTING DATA
-#     print('Importing data...')
-#     with open('data/HizzaCoin.Accounts.json', 'r') as f:
-#         accounts = json.load(f)
-        
-#     with open('data/HizzaCoin.Challenges.json', 'r') as f:
-#         challenges = json.load(f)
-        
-#     with open('data/HizzaCoin.Transactions.json', 'r') as f:
-#         transactions = json.load(f)
-    
-#     ## CLEANING   
-#     # Accounts
-#     for i in accounts:
-#         i['AccountId'] = i['_id']['$oid']
-#         del i['_id']
-        
-#         i['LastClaimDate'] = i['LastClaimDate']['$date']
-        
-#     # Challenges
-#     for i in challenges:
-#         i['ChallengeId'] = i['_id']['$oid']
-#         del i['_id']
+        self.challenge_results = {
+            'TotalChallenges' : 0,
+            'BiggestChallengeWin' : 0,
+            'BiggestChallengeWinner' : '',
+            'BiggestChallengeLoser' : '',
             
-#         i['ChallengeDate'] = i['Date']['$date']
-#         del i['Date']
+            'MostPlayedHand' : {
+                1 : 0,
+                2 : 0,
+                3 : 0
+            },
+            
+            'MostWinsHand' : {
+                1 : 0,
+                2 : 0,
+                3 : 0
+            }
+        }
+            
+        self.roulette_results = {
+            'TotalRouletteWagers' : 0,
+            'BiggestRouletteWager' : 0,
+            'BiggestRouletteWin' : 0,
+            'BiggestRouletteLoss' : 0
+            }
         
-#     # Transactions
-#     for i in transactions:
-#         i['TransactionId'] = i['_id']['$oid']
-#         del i['_id']
+        self.get_hizza_stats()
         
-#         i['TransactionDate'] = i['Date']['$date']
-#         del i['Date']
-
-#     # Convert to DataFrame
-#     accounts_df = pd.DataFrame.from_dict(accounts)
-#     challenges_df = pd.DataFrame.from_dict(challenges)
-#     transactions_df = pd.DataFrame.from_dict(transactions).dropna(ignore_index=True)
-
-#     # Fixing datetime
-#     accounts_df['LastClaimDate'] = pd.to_datetime(accounts_df['LastClaimDate'])
-#     challenges_df['ChallengeDate'] = pd.to_datetime(challenges_df['ChallengeDate'])
-#     transactions_df['TransactionDate'] = pd.to_datetime(transactions_df['TransactionDate'])
-
-#     # Typecasting
-#     transactions_df['ReceiverDiscordId'] = transactions_df['ReceiverDiscordId'].astype(int)
-#     transactions_df['SenderDiscordId'] = transactions_df['SenderDiscordId'].astype(int)
-
-#     # DATE FILTER
-#     challenges_df = challenges_df[(challenges_df['ChallengeDate'].dt.year == 2025) & (challenges_df['ChallengeDate'].dt.month == 7)]
-
-#     transactions_df = transactions_df[(transactions_df['TransactionDate'].dt.year == 2025) & (transactions_df['TransactionDate'].dt.month == 7)]
-
-#     return accounts_df, challenges_df, transactions_df
-
-
-# ## EXTRACTING RESULTS
-# results = {
-#     'TotalClaims' : 0,
-#     'BiggestClaim' : 0,
-#     'InitialClaims' : 0,
-#     'TotalChallenges' : 0,
-#     'MostPlayedHand' : {
-#         1 : 0,
-#         2: 0,
-#         3: 0
-#     },
+        self.get_coin_results()
+        self.get_challenge_results()
+        
+    def get_hizza_stats(self):
+        self.transactions = requests.get('http://localhost:8080/api/transactions').json()
+        self.challenges = requests.get('http://localhost:8080/api/challenges').json()
+        
+        # # Convert dates
+        # for item in self.transactions:
+        #     datetime.fromisoformat(item['Date'].replace("Z", "+00:00"))
+            
+        # for item in self.transactions:
+        #     datetime.fromisoformat(item['Date'].replace("Z", "+00:00"))
+        
+        return
     
-#     'MostWinsHand' : {
-#         1 : 0,
-#         2 : 0,
-#         3 : 0
-#     },
+    def get_coin_results(self):
+        
+        for item in self.transactions:
+            # Claims
+            if item['TransactionType'] == 1:
+                self.coin_results['TotalClaims'] += 1
+                self.coin_results['TotalClaimed'] += item['Amount']
+                
+                if item['ReceiverDiscordId'] not in self.coin_results['TotalClaimers']:
+                    self.coin_results['TotalClaimers'].append(item['ReceiverDiscordId'])
+                
+                if item['Amount'] > self.coin_results['BiggestClaim']:
+                    self.coin_results['BiggestClaim'] = item['Amount']
+                    self.coin_results['BiggestClaimer'] = item['ReceiverDiscordId']
+                 
+            # Initial
+            if item['TransactionType'] == 0:
+                self.coin_results['InitialClaims'] += 1
+                
+            # Give
+            if item['TransactionType'] == 3:
+                self.coin_results['TotalCoinGives'] += 1
+                self.coin_results['TotalCoinGiven'] += item['Amount']
+                
+                if item['Amount'] > self.coin_results['BiggestCoinGive']:
+                    self.coin_results['BiggestCoinGive'] = item['Amount']
+                    self.coin_results['BiggestCoinGiver'] = item['SenderDiscordId']
+                    self.coin_results['BiggestCoinReceiver'] = item['ReceiverDiscordId']
+                    
+        return
     
-#     'TotalCoinGives' : 0,
-#     'BiggestCoinGive' : 0,
-#     'TotalRouletteWagers' : 0,
-#     'BiggestRouletteWager' : 0,
-#     'BiggestRouletteWin' : 0
-# }
-
-# print('Extracting results...')
-# # Transaction types
-# transaction_types = transactions_df.groupby(['TransactionType']).size()
-
-# results['TotalClaims'] = transaction_types.loc[1]
-# # results['InitialClaims'] = transactions_df.groupby(['TransactionType']).size().loc[0]
-# results['TotalCoinGives'] = transaction_types.loc[3]
-# results['TotalRouletteWagers'] = transaction_types.loc[4]
-
-# # Challenges Hands
-# total_challenges = challenges_df.groupby(['State']).size()
-# results['TotalChallenges'] = total_challenges.loc[1] + total_challenges.loc[2] + total_challenges.loc[3]
-
-# challenger_hands = challenges_df.groupby(['State', 'ChallengerHand'], as_index=False).size()
-# challenged_hands = challenges_df.groupby(['State', 'ChallengedHand'], as_index=False).size()
-
-# for i in range(1,4):
-#     # Played hands
-#     results['MostPlayedHand'][i] += challenger_hands.loc[
-#         (challenger_hands['State'].isin([1, 2, 3]))
-#         & (challenger_hands['ChallengerHand'] == i)
-#     ]['size'].sum()
-    
-#     results['MostPlayedHand'][i] += challenged_hands.loc[
-#         (challenged_hands['State'].isin([1, 2, 3]))
-#         & (challenged_hands['ChallengedHand'] == i)
-#     ]['size'].sum()
-    
-#     # Winning hands
-#     results['MostWinsHand'][i] += challenger_hands.loc[
-#         (challenger_hands['State'] == 1) 
-#         & (challenger_hands['ChallengerHand'] == i)
-#     ]['size'].sum()
-    
-#     results['MostWinsHand'][i] += challenged_hands.loc[
-#         (challenged_hands['State'] == 2) 
-#         & (challenged_hands['ChallengedHand'] == i)
-#     ]['size'].sum()
-
-# # Transaction amounts
-# results['BiggestCoinGive'] = transactions_df.loc[transactions_df['TransactionType'] == 3]['Amount'].max()
-
-# results['Top5RouletteWagers'] = transactions_df.loc[
-#     (transactions_df['TransactionType'] == 4)
-#     & (transactions_df['ReceiverDiscordId'] == 0)]['Amount'].nlargest(5).tolist()
-
-# results['Top5RouletteWins'] = transactions_df.loc[
-#     (transactions_df['TransactionType'] == 4)
-#     & (transactions_df['SenderDiscordId'] == 0)]['Amount'].nlargest(5).tolist()
-
-# results['BiggestRouletteWager'] = max(results['Top5RouletteWagers'])
-# results['BiggestRouletteWin'] = max(results['Top5RouletteWins'])
+    def get_challenge_results(self):
+        
+        for item in self.challenges:
+            if item['State'] in [1, 2, 3]: # Challenge is complete
+                
+                self.challenge_results['TotalChallenges'] += 1
+                
+                self.challenge_results['MostPlayedHand'][item['ChallengerHand']] += 1
+                self.challenge_results['MostPlayedHand'][item['ChallengedHand']] += 1
+                
+                # Challenger win                
+                if item['State'] == 1:
+                    self.challenge_results['MostWinsHand'][item['ChallengerHand']] += 1
+                    
+                    if item['Wager'] > self.challenge_results['BiggestChallengeWin']:
+                        self.challenge_results['BiggestChallengeWin'] = item['Wager']
+                        self.challenge_results['BiggestChallengeWinner'] = item['ChallengerDiscordId']
+                        self.challenge_results['BiggestChallengeLoser'] = item['ChallengedDiscordId']
+                    
+                # Challenged win
+                if item['State'] == 2:
+                    self.challenge_results['MostWinsHand'][item['ChallengedHand']] += 1
+                    
+                    if item['Wager'] > self.challenge_results['BiggestChallengeWin']:
+                        self.challenge_results['BiggestChallengeWin'] = item['Wager']
+                        self.challenge_results['BiggestChallengeWinner'] = item['ChallengedDiscordId']
+                        self.challenge_results['BiggestChallengeLoser'] = item['ChallengerDiscordId']
+                
+        return
