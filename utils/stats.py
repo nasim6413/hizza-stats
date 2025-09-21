@@ -116,7 +116,11 @@ class UserStats:
         
         # Finding favourite hand
         self.challenge_results['FavouriteHand'] = max(self.challenge_results['FavouriteHands'], key=self.challenge_results['FavouriteHands'].get)
-        self.challenge_results['FavouriteHand'] = CHALLENGE_HANDS[self.challenge_results['FavouriteHand']]
+        
+        if self.challenge_results['FavouriteHands'][self.challenge_results['FavouriteHand']] > 0:
+            self.challenge_results['FavouriteHand'] = CHALLENGE_HANDS[self.challenge_results['FavouriteHand']]
+        else:
+            self.challenge_results['FavouriteHand'] = 'None'
                 
         return
 

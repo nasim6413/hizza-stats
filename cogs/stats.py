@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from typing import Optional
-from utils.users import UserStats
+from utils.stats import UserStats
 from utils.helpers import fetch_username
 
 class UserCog(commands.Cog):
@@ -70,7 +70,6 @@ class UserCog(commands.Cog):
             inline=False
         )
 
-        del user_stats
         await ctx.respond(embed=embed)
     
 def setup(bot):

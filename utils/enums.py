@@ -20,3 +20,9 @@ CHALLENGE_STATES = {
     3 : 'Draw',
     4 : 'Expired'
 }
+
+TIMEFRAMES = {
+    'lastmonth' : 'Last Month',
+    'thismonth' : 'This Month',
+    None : 'All-Time'
+}

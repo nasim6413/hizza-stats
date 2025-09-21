@@ -1,13 +1,14 @@
 import requests
 from datetime import datetime
+from dateutil.parser import isoparse
+from utils.helpers import fetch_months
 from utils.enums import *
 
 class HizzaReport:
-    def __init__(self):
-        # self.date = False # Set date filter
-        # self.months = []
-        self.transactions = False
-        self.challenges = False
+    def __init__(self, timeframe):
+        self.timeframe = timeframe
+        self.transactions = []
+        self.challenges = []
         
         self.coin_results = {
             'TotalClaims' : 0,
@@ -55,16 +56,30 @@ class HizzaReport:
         self.get_challenge_results()
         
     def get_hizza_stats(self):
-        self.transactions = requests.get('http://localhost:8080/api/transactions').json()
-        self.challenges = requests.get('http://localhost:8080/api/challenges').json()
+        """Requests data and filters based on timeframe parameter."""
+        transactions = requests.get('http://localhost:8080/api/transactions').json()
+        challenges = requests.get('http://localhost:8080/api/challenges').json()
         
-        # # Convert dates
-        # for item in self.transactions:
-        #     datetime.fromisoformat(item['Date'].replace("Z", "+00:00"))
+        # Date filtering
+        if self.timeframe:
+            month, year = fetch_months(self.timeframe)
             
-        # for item in self.transactions:
-        #     datetime.fromisoformat(item['Date'].replace("Z", "+00:00"))
+            for item in transactions:
+                date = isoparse(item['Date']) 
+                
+                if date.month == month and date.year == year:
+                    self.transactions.append(item)
+                    
+            for item in challenges:
+                date = isoparse(item['Date']) 
+                
+                if date.month == month and date.year == year:
+                    self.challenges.append(item)
         
+        else:
+            self.transactions = transactions
+            self.challenges = challenges 
+            
         return
     
     def get_coin_results(self):

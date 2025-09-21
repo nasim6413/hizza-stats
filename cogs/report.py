@@ -1,23 +1,31 @@
 import discord
 import datetime
+from discord.commands import Option
 from discord.ext import commands
 from utils.report import HizzaReport
 from utils.helpers import fetch_username
-from utils.enums import CHALLENGE_HANDS
+from utils.enums import CHALLENGE_HANDS, TIMEFRAMES
 
 class ReportCog(commands.Cog):
 
     def __init__(self, bot): 
         self.bot = bot
         
-    report = discord.SlashCommandGroup("report", "Discover more about Hizza's all-time stats!")
+    @discord.slash_command(description='Discover Hizza economy activity!')
+    async def report(
+        self, 
+        ctx,  
+        timeframe = Option(str, 
+                           "Pick a report timeframe", 
+                           choices=["lastmonth", "thismonth"],
+                           required=False)
+    ):
+        await ctx.defer()  # prevents interaction timeout
         
-    @report.command(description='Discover Hizza economy activity!')
-    async def all(self, ctx):
-        hizza_report = HizzaReport()
+        hizza_report = HizzaReport(timeframe)
         
         # Get Hizza account details
-        hizza_account = await self.bot.fetch_user(1076237275513487361)
+        hizza_account = await self.bot.fetch_user(1414255521527238736)
         
         # Fetching Discord names from IDs
         biggest_claimer = await fetch_username(self.bot, hizza_report.coin_results['BiggestClaimer'])
@@ -29,7 +37,7 @@ class ReportCog(commands.Cog):
 
         # Creating embed
         embed = discord.Embed(
-                title=f'Hizza All-Time Stats',
+                title=f'Hizza {TIMEFRAMES[timeframe]} Stats',
                 color=discord.Colour.blurple()
                 )
         
@@ -58,12 +66,6 @@ class ReportCog(commands.Cog):
         )
         
         await ctx.respond(embed=embed)
-        
-    # @report.command(description='Discover Hizza economy activity!')
-    # async def challenge(self, ctx):
-        
-    # @report.command(description='Discover Hizza economy activity!')
-    # async def roulette(self, ctx):
 
 def setup(bot):
     bot.add_cog(ReportCog(bot))
