@@ -2,7 +2,7 @@ import discord
 import datetime
 from discord.commands import Option
 from discord.ext import commands
-from utils.report import HizzaReport
+from models.report import HizzaReport
 from utils.helpers import fetch_username
 from utils.enums import CHALLENGE_HANDS, TIMEFRAMES
 
@@ -23,17 +23,22 @@ class ReportCog(commands.Cog):
         await ctx.defer()  # prevents interaction timeout
         
         hizza_report = HizzaReport(timeframe)
+        coin_results = hizza_report.get_coin_results()
+        challenge_results = hizza_report.get_challenge_results()
         
         # Get Hizza account details
         hizza_account = await self.bot.fetch_user(1414255521527238736)
         
         # Fetching Discord names from IDs
-        biggest_claimer = await fetch_username(self.bot, hizza_report.coin_results['BiggestClaimer'])
-        biggest_coin_giver = await fetch_username(self.bot, hizza_report.coin_results['BiggestCoinGiver'])
-        biggest_coin_receiver = await fetch_username(self.bot, hizza_report.coin_results['BiggestCoinReceiver'])
+        #TODO: refactor this
+        biggest_claimer = await fetch_username(self.bot, coin_results['BiggestClaimer'])
+        biggest_coin_giver = await fetch_username(self.bot, coin_results['BiggestCoinGiver'])
+        biggest_coin_receiver = await fetch_username(self.bot, coin_results['BiggestCoinReceiver'])
         
-        biggest_challenge_winner = await fetch_username(self.bot, hizza_report.challenge_results['BiggestChallengeWinner'])
-        biggest_challenge_loser = await fetch_username(self.bot, hizza_report.challenge_results['BiggestChallengeLoser'])
+        biggest_challenge_winner = await fetch_username(self.bot, challenge_results['BiggestChallengeWinner'])
+        biggest_challenge_loser = await fetch_username(self.bot, challenge_results['BiggestChallengeLoser'])
+        most_challenge_wins = await fetch_username(self.bot, challenge_results['MostWins'])
+        most_challenge_losses = await fetch_username(self.bot, challenge_results['MostLosses'])
 
         # Creating embed
         embed = discord.Embed(
@@ -43,24 +48,30 @@ class ReportCog(commands.Cog):
         
         embed.set_thumbnail(url=hizza_account.avatar.url)
         
+        # Coin activity
         embed.add_field(
             name='HizzaCoin',
             value=(
-                f"* **{hizza_report.coin_results['TotalClaims']}** total claims by **{len(hizza_report.coin_results['TotalClaimers'])}** users\n"
-                f"* **{hizza_report.coin_results['TotalClaimed']}** total coins were claimed\n"
-                f"* Biggest claim: **{hizza_report.coin_results['BiggestClaim']}** coins by **{biggest_claimer}**\n"
-                f"* There have been **{hizza_report.coin_results['InitialClaims']}** new Hizza fans!\n"
-                f"* **{hizza_report.coin_results['TotalCoinGives']}** coins were given amounting to **{hizza_report.coin_results['TotalCoinGiven']}** coins\n"
-                f"* Biggest give: **{hizza_report.coin_results['BiggestCoinGive']}** coins from **{biggest_coin_giver}** to **{biggest_coin_receiver}**\n"
+                f"* **{coin_results['TotalClaims']}** total claims by **{len(coin_results['TotalClaimers'])}** users\n"
+                f"* **{coin_results['TotalClaimed']}** total coins were claimed\n"
+                f"* Biggest claim: **{coin_results['BiggestClaim']}** coins by **{biggest_claimer}**\n"
+                f"* There have been **{coin_results['InitialClaims']}** new Hizza fans!\n"
+                f"* **{coin_results['TotalCoinGives']}** coins were given amounting to **{coin_results['TotalCoinGiven']}** coins\n"
+                f"* Biggest give: **{coin_results['BiggestCoinGive']}** coins from **{biggest_coin_giver}** to **{biggest_coin_receiver}**\n"
             ),
             inline=False
         )
 
+        # Challenge activity
         embed.add_field(
             name='Challenges',
             value=(
-                f"* Total challenges: **{hizza_report.challenge_results['TotalChallenges']}**\n"
-                f"* Craziest wager: **{biggest_challenge_winner}** won **{hizza_report.challenge_results['BiggestChallengeWin']}** coins from **{biggest_challenge_loser}**\n"
+                f"* Total challenges: **{challenge_results['TotalChallenges']}**\n"
+                f"* Craziest wager: **{biggest_challenge_winner}** won **{challenge_results['BiggestChallengeWin']}** coins from **{biggest_challenge_loser}**\n"
+                f"* Most challenge wins: **{most_challenge_wins}**\n"
+                f"* Most challenge losses: **{most_challenge_losses}**\n"
+                f"* Most played hand: **{CHALLENGE_HANDS[challenge_results['MostPlayedHand']]}**\n"
+                f"* **{CHALLENGE_HANDS[challenge_results['MostWinsHand']]}** won most challenges!\n"
             ),
             inline=False
         )

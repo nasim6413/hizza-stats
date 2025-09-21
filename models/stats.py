@@ -1,0 +1,168 @@
+import requests
+from utils.enums import *
+
+class UserStats:
+    def __init__(self, user_id):
+        self.user_id = user_id
+        self.transactions = False
+        self.challenges = False
+        
+        transactions = requests.get('http://localhost:8080/api/transactions').json()
+        challenges = requests.get('http://localhost:8080/api/challenges').json()
+        
+        self.transactions = [
+            t for t in transactions if 
+                (t['SenderDiscordId'] == self.user_id) or 
+                (t['ReceiverDiscordId'] == self.user_id)
+            ]
+
+        self.challenges = [
+            c for c in challenges if 
+                (c['ChallengerDiscordId'] == self.user_id) or 
+                (c['ChallengedDiscordId'] == self.user_id)
+            ]
+        
+        return
+
+    def get_coin_results(self):
+        """Get user statistics based on coin activity."""
+        coin_results = {
+            'TotalClaims' : 0,
+            'BiggestClaim' : 0,
+            'TotalGives' : 0,
+            'TotalGiveAmount' : 0,
+            'TotalGiven' : 0,
+            'TotalGivenAmount' : 0,
+            'BiggestGive' : 0,
+            'BiggestGiveTo' : '',
+            'BiggestGiven' : 0,
+            'BiggestGivenFrom' : 0
+            } 
+        
+        for item in self.transactions:
+            
+            if item['TransactionType'] == 1:
+                # Adds up total claims
+                coin_results['TotalClaims'] += 1
+                
+                # Changes biggest claim if larger than current
+                if item['Amount'] > coin_results['BiggestClaim']:
+                    coin_results['BiggestClaim'] = item['Amount']
+        
+            if item['TransactionType'] == 3:
+                
+                # Coin gives
+                if item['SenderDiscordId'] == self.user_id:
+                    coin_results['TotalGives'] += 1
+                    coin_results['TotalGiveAmount'] += item['Amount']
+                    
+                    if item['Amount'] > coin_results['BiggestGive']:
+                        coin_results['BiggestGive'] = item['Amount']
+                        coin_results['BiggestGiveTo'] = item['ReceiverDiscordId']
+                    
+                # Coin receives
+                if item['ReceiverDiscordId'] == self.user_id:
+                    coin_results['TotalGiven'] += 1
+                    coin_results['TotalGivenAmount'] += item['Amount']
+                    
+                    if item['Amount'] > coin_results['BiggestGiven']:
+                        coin_results['BiggestGiven'] = item['Amount']
+                        coin_results['BiggestGivenFrom'] = item['SenderDiscordId']
+                
+        return coin_results
+
+    def get_challenge_results(self):
+        """Get user statistics based on challenges activity."""
+        challenge_results = {
+            'TotalChallenges' : 0,
+            'TotalChallenger' : 0,
+            'TotalChallenged' : 0,
+            'FavouriteHand' : 0,
+            'FavouriteHands' : {
+                1 : 0,
+                2 : 0,
+                3 : 0
+                }
+            }
+                   
+        for item in self.challenges:
+            if item['State'] in [1, 2, 3]: # Completed challenges
+                challenge_results['TotalChallenges'] += 1
+                
+                if item['ChallengerDiscordId'] == self.user_id:
+                    challenge_results['TotalChallenger'] += 1
+                    
+                    # Append hands
+                    challenge_results['FavouriteHands'][item['ChallengerHand']] += 1
+                    
+                elif item['ChallengedDiscordId'] == self.user_id:
+                    challenge_results['TotalChallenged'] += 1
+                    
+                    # Append hands
+                    challenge_results['FavouriteHands'][item['ChallengedHand']] += 1
+        
+        # Finding favourite hand
+        challenge_results['FavouriteHand'] = max(challenge_results['FavouriteHands'], key=challenge_results['FavouriteHands'].get)
+        
+        if challenge_results['FavouriteHands'][challenge_results['FavouriteHand']] > 0:
+            challenge_results['FavouriteHand'] = CHALLENGE_HANDS[challenge_results['FavouriteHand']]
+        else:
+            challenge_results['FavouriteHand'] = 'None'
+                
+        return challenge_results
+
+    def get_roulette_results(self):
+        """Returns user statistics based on roulette activity."""
+        roulette_results = {
+            'WagerCount' : 0,
+            'BiggestWin' : 0,
+            'BiggestLoss' : 0,
+            'TotalWon' : 0,
+            'TotalLost' : 0
+            }
+                
+        previous_transaction = None
+        
+        for item in self.transactions:
+            if item['TransactionType'] == 4:
+                
+                # Either a wager or a loss
+                if item['SenderDiscordId'] == self.user_id: 
+                    
+                    # Loss
+                    if previous_transaction and previous_transaction['SenderDiscordId'] == self.user_id:
+
+                        if previous_transaction['Amount'] > roulette_results['BiggestLoss']:
+                            roulette_results['BiggestLoss'] = previous_transaction['Amount']
+                
+                        roulette_results['TotalLost'] += previous_transaction['Amount']
+                        
+                    # Updates wager count
+                    roulette_results['WagerCount'] += 1
+                    
+                # Wins
+                if item['ReceiverDiscordId'] == self.user_id:   
+                                
+                    # Sets new biggest win
+                    if item['Amount'] > roulette_results['BiggestWin']:
+                        roulette_results['BiggestWin'] = item['Amount']
+                       
+                    # Updates total won 
+                    roulette_results['TotalWon'] += item['Amount']
+                    
+                # Updates flag
+                previous_transaction = item
+                
+        # Checks final transaction for loss
+        final_transaction = self.transactions[-1]
+        
+        if final_transaction['SenderDiscordId'] == self.user_id:
+            if final_transaction['Amount'] > roulette_results['BiggestLoss']:
+                roulette_results['BiggestLoss'] = final_transaction['Amount']
+                
+            roulette_results['TotalLost'] += final_transaction['Amount']
+                        
+            # Updates wager count
+            roulette_results['WagerCount'] += 1 
+                    
+        return roulette_results
