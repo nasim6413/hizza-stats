@@ -25,5 +25,9 @@ def fetch_months(timeframe):
         else:
             month = today.month - 1
             year = today.year
+            
+    else:
+        month = None
+        year = None
         
     return month, year

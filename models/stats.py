@@ -1,26 +1,51 @@
 import requests
+from dateutil.parser import isoparse
+from utils.helpers import fetch_months
 from utils.enums import *
 
 class UserStats:
-    def __init__(self, user_id):
+    def __init__(self, user_id, timeframe):
+        self.timeframe = timeframe
         self.user_id = user_id
-        self.transactions = False
-        self.challenges = False
+        self.transactions = []
+        self.challenges = []
         
         transactions = requests.get('http://localhost:8080/api/transactions').json()
         challenges = requests.get('http://localhost:8080/api/challenges').json()
+        # roulettes = requests.get('http://localhost:8080/api/roulette').json()
         
-        self.transactions = [
+        # User filtering
+        transactions = [
             t for t in transactions if 
                 (t['SenderDiscordId'] == self.user_id) or 
                 (t['ReceiverDiscordId'] == self.user_id)
             ]
 
-        self.challenges = [
+        challenges = [
             c for c in challenges if 
                 (c['ChallengerDiscordId'] == self.user_id) or 
                 (c['ChallengedDiscordId'] == self.user_id)
             ]
+        
+        # Date filtering
+        if self.timeframe != "alltime":
+            month, year = fetch_months(self.timeframe)
+            
+            for item in transactions:
+                date = isoparse(item['Date']) 
+                
+                if date.month == month and date.year == year:
+                    self.transactions.append(item)
+                    
+            for item in challenges:
+                date = isoparse(item['Date']) 
+                
+                if date.month == month and date.year == year:
+                    self.challenges.append(item)
+        
+        else:
+            self.transactions = transactions
+            self.challenges = challenges 
         
         return
 
@@ -112,6 +137,7 @@ class UserStats:
         return challenge_results
 
     def get_roulette_results(self):
+        #TODO: roulette enums
         """Returns user statistics based on roulette activity."""
         roulette_results = {
             'WagerCount' : 0,

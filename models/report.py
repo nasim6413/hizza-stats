@@ -13,7 +13,7 @@ class HizzaReport:
         challenges = requests.get('http://localhost:8080/api/challenges').json()
         
         # Date filtering
-        if self.timeframe:
+        if self.timeframe != "alltime":
             month, year = fetch_months(self.timeframe)
             
             for item in transactions:
@@ -49,6 +49,7 @@ class HizzaReport:
             }
         
         for item in self.transactions:
+            
             # Claims
             if item['TransactionType'] == 1:
                 coin_results['TotalClaims'] += 1
@@ -165,6 +166,7 @@ class HizzaReport:
         return challenge_results
     
     def get_roulette_results(self):
+        #TODO: roulette enums
         """Returns statistics based on roulette activity."""
         roulette_results = {
             'TotalRouletteWagers' : 0,
@@ -177,6 +179,8 @@ class HizzaReport:
             'MostLosses' : {}
             }
         
-        #TODO: loops
+        for item in self.transactions:
+            if item['TransactionType'] == 4:
+                TotalRouletteWagers += 1
         
         return roulette_results

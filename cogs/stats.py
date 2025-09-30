@@ -1,8 +1,9 @@
 import discord
 from discord.ext import commands
-from typing import Optional
+from discord.commands import Option
 from models.stats import UserStats
 from utils.helpers import fetch_username
+from utils.enums import TIMEFRAMES
 
 class UserCog(commands.Cog):
 
@@ -10,7 +11,18 @@ class UserCog(commands.Cog):
         self.bot = bot
         
     @discord.slash_command(description='Learn more about your Hizza activity!')
-    async def stats(self, ctx, user: Optional[discord.Member]):
+    async def stats(
+        self, 
+        ctx, 
+        user = Option(discord.Member, 
+                     "Pick a user", 
+                     required=False,
+                     default=None),
+        timeframe = Option(str, 
+                    "Pick a stats timeframe", 
+                    choices=["alltime", "lastmonth", "thismonth"],
+                    required=False,
+                    default="alltime")):
         await ctx.defer()
         
         if not user:
@@ -19,7 +31,7 @@ class UserCog(commands.Cog):
         avatar_url = user.avatar.url
         user_name = user.name
         
-        user_stats = UserStats(str(user.id))
+        user_stats = UserStats(str(user.id), timeframe)
         coin_results = user_stats.get_coin_results()
         challenge_results = user_stats.get_challenge_results()
         roulette_results = user_stats.get_roulette_results()
@@ -31,7 +43,7 @@ class UserCog(commands.Cog):
         # Creating embed
         embed = discord.Embed(
                 title=f'Hizza Stats: {user_name}',
-                description='Discover your Hizza activity!',
+                description=f'Discover your Hizza activity for {TIMEFRAMES[timeframe].lower()}!',
                 color=discord.Colour.blurple()
                 )
         
@@ -73,6 +85,10 @@ class UserCog(commands.Cog):
             ),
             inline=False
         )
+        
+        embed.set_footer(
+            text='*More roulette stats coming soon!'
+            )
 
         await ctx.respond(embed=embed)
     

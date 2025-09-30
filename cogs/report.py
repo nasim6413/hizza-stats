@@ -1,5 +1,4 @@
 import discord
-import datetime
 from discord.commands import Option
 from discord.ext import commands
 from models.report import HizzaReport
@@ -17,8 +16,9 @@ class ReportCog(commands.Cog):
         ctx,  
         timeframe = Option(str, 
                            "Pick a report timeframe", 
-                           choices=["lastmonth", "thismonth"],
-                           required=False)
+                           choices=["alltime", "lastmonth", "thismonth"],
+                           required=False,
+                           default="alltime")
     ):
         await ctx.defer()  # prevents interaction timeout
         
@@ -75,6 +75,10 @@ class ReportCog(commands.Cog):
             ),
             inline=False
         )
+        
+        embed.set_footer(
+            text='*Roulette stats coming soon!'
+            )
         
         await ctx.respond(embed=embed)
 

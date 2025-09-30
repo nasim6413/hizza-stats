@@ -3,10 +3,12 @@ Discord bot built for user and community statistics from [Hizza](https://github.
 
 ## Features
 ### `/stats`  
-- Optional parameters: `user` (default is self).
+- Optional parameters: 
+    - `user` (default is self).
+    - `timeframe` (options: `alltime`, `lastmonth`, `thismonth` - default is all-time).
 - Returns user statistics based on Hizza activity (coin claim, challenges, and roulette). 
 
 ### `/report`
 - Optional paremeters: 
-    - `timeframe` (options: `lastmonth`, `thismonth` - default is all-time).
+    - `timeframe` (options: `alltime`, `lastmonth`, `thismonth` - default is all-time).
 - Returns statistics based on all Hizza community activity.

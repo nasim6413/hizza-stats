@@ -24,5 +24,5 @@ CHALLENGE_STATES = {
 TIMEFRAMES = {
     'lastmonth' : 'Last Month',
     'thismonth' : 'This Month',
-    None : 'All-Time'
+    'alltime' : 'All-Time'
 }
