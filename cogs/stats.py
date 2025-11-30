@@ -3,7 +3,7 @@ from discord.ext import commands
 from discord.commands import Option
 from models.stats import UserStats
 from utils.helpers import fetch_username
-from utils.enums import TIMEFRAMES
+from utils.enums import TIMEFRAMES, CHALLENGE_HANDS
 
 class UserCog(commands.Cog):
 
@@ -17,12 +17,8 @@ class UserCog(commands.Cog):
         user = Option(discord.Member, 
                      "Pick a user", 
                      required=False,
-                     default=None),
-        timeframe = Option(str, 
-                    "Pick a stats timeframe", 
-                    choices=["alltime", "lastmonth", "thismonth"],
-                    required=False,
-                    default="alltime")):
+                     default=None)
+        ):
         await ctx.defer()
         
         if not user:
@@ -31,63 +27,65 @@ class UserCog(commands.Cog):
         avatar_url = user.avatar.url
         user_name = user.name
         
-        user_stats = UserStats(str(user.id), timeframe)
+        user_stats = UserStats(str(user.id))
         coin_results = user_stats.get_coin_results()
         challenge_results = user_stats.get_challenge_results()
         roulette_results = user_stats.get_roulette_results()
         
-        # Fetching usernames from user_id
-        biggest_give_to = await fetch_username(self.bot, coin_results['BiggestGiveTo'])
-        biggest_given_from = await fetch_username(self.bot, coin_results['BiggestGivenFrom'])
+        # # Fetching usernames from user_id
+        # biggest_give_to = await fetch_username(self.bot, coin_results['BiggestGiveTo'])
+        # biggest_given_from = await fetch_username(self.bot, coin_results['BiggestGivenFrom'])
         
         # Creating embed
         embed = discord.Embed(
                 title=f'Hizza Stats: {user_name}',
-                description=f'Discover your Hizza activity for {TIMEFRAMES[timeframe].lower()}!',
+                description=f'Discover your Hizza activity!',
                 color=discord.Colour.blurple()
                 )
         
         embed.set_thumbnail(url=avatar_url)
 
-        embed.add_field(
-            name='HizzaCoin',
-            value=(
-                f"* Total claims: **{coin_results['TotalClaims']}**\n"
-                f"* Biggest claim: **{coin_results['BiggestClaim']}** coins\n"
-                f"* Total given: **{coin_results['TotalGiveAmount']}** coins\n"
-                f"* Biggest give: **{coin_results['BiggestGive']}** coins to **{biggest_give_to}**\n"
-                f"* Total received: **{coin_results['TotalGivenAmount']}** coins\n"
-                f"* Biggest received: **{coin_results['BiggestGiven']}** coins from **{biggest_given_from}**"
-
-            ),
-            inline=False
-        )
+        if coin_results:
+            embed.add_field(
+                name='HizzaCoin',
+                value=(
+                    f"* Claimed **{coin_results['TotalClaims']}** times\n"
+                    f"* Claimed **{coin_results['TotalClaimed']}** coins in total\n"
+                    f"* Best claim: **{coin_results['BestClaim']}** coins\n"
+                    f"* Total coins given: **{coin_results['TotalGiveAmount']}** coins\n"
+                    f"* Total coins received: **{coin_results['TotalGivenAmount']}** coins\n"
+                ),
+                inline=False
+            )
         
-        embed.add_field(
-            name='Challenge',
-            value=(
-                f"* Total challenges: **{challenge_results['TotalChallenges']}**\n"
-                f"* Challenged **{challenge_results['TotalChallenger']}** users\n"
-                f"* Challenged by **{challenge_results['TotalChallenged']}** users\n"
-                f"* Favourite hand: **{challenge_results['FavouriteHand']}**"
-            ),
-            inline=False
-        )
+        if challenge_results:
+            embed.add_field(
+                name='Challenge',
+                value=(
+                    f"* Participated in **{challenge_results['TotalChallenges']}** challenges\n"
+                    f"* Challenged **{challenge_results['TotalChallenger']}** users\n"
+                    f"* Has been challenged by **{challenge_results['TotalChallenged']}** users\n"
+                    f"* Favourite hand: **{challenge_results['FavouriteHand'] if not None else 'Unpredictable...'}**"
+                ),
+                inline=False
+            )
 
-        embed.add_field(
-            name='Roulette',
-            value=(
-                f"* **{roulette_results['WagerCount']}** wagers\n"
-                f"* Total won: **{roulette_results['TotalWon']}** coins\n"
-                f"* Biggest win: **{roulette_results['BiggestWin']}** coins\n"
-                f"* Total lost: **{roulette_results['TotalLost']}** coins\n"
-                f"* Biggest loss: **{roulette_results['BiggestLoss']}** coins"
-            ),
-            inline=False
-        )
+        if roulette_results:
+            embed.add_field(
+                name='Roulette',
+                value=(
+                    f"* **Placed {roulette_results['WagerCount']}** wagers\n"
+                    f"* Total won: **{roulette_results['TotalWon']}** coins\n"
+                    f"* Biggest win: **{roulette_results['BiggestWin']}** coins\n"
+                    f"* Total lost: **{roulette_results['TotalLost']}** coins\n"
+                    f"* Biggest loss: **{roulette_results['BiggestLoss']}** coins\n"
+                    f"* Favourite game: **{roulette_results['FavouriteGame'] if not None else 'What a gambler...'}** coins"
+                ),
+                inline=False
+            )
         
         embed.set_footer(
-            text='*More roulette stats coming soon!'
+            text='*More stats coming soon!'
             )
 
         await ctx.respond(embed=embed)

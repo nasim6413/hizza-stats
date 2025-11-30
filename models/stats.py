@@ -1,18 +1,17 @@
 import requests
-from dateutil.parser import isoparse
+import pandas as pd
 from utils.helpers import fetch_months
 from utils.enums import *
 
 class UserStats:
-    def __init__(self, user_id, timeframe):
-        self.timeframe = timeframe
+    def __init__(self, user_id):
         self.user_id = user_id
         self.transactions = []
         self.challenges = []
         
         transactions = requests.get('http://localhost:8080/api/transactions').json()
         challenges = requests.get('http://localhost:8080/api/challenges').json()
-        # roulettes = requests.get('http://localhost:8080/api/roulette').json()
+        roulettes = requests.get('http://localhost:8080/api/roulette').json()
         
         # User filtering
         transactions = [
@@ -27,168 +26,204 @@ class UserStats:
                 (c['ChallengedDiscordId'] == self.user_id)
             ]
         
-        # Date filtering
-        if self.timeframe != "alltime":
-            month, year = fetch_months(self.timeframe)
-            
-            for item in transactions:
-                date = isoparse(item['Date']) 
-                
-                if date.month == month and date.year == year:
-                    self.transactions.append(item)
-                    
-            for item in challenges:
-                date = isoparse(item['Date']) 
-                
-                if date.month == month and date.year == year:
-                    self.challenges.append(item)
+        roulettes = [
+            r for r in roulettes
+        ]
         
-        else:
-            self.transactions = transactions
-            self.challenges = challenges 
+        self.challenges = pd.DataFrame(challenges)
         
+        # Merge transactions & roulettes
+        transactions = pd.DataFrame(transactions)
+        roulettes = pd.DataFrame(roulettes).drop(columns=['Id'])
+        
+        # Wager merge table
+        roulette_wagers = roulettes.rename(columns={
+            'WageredTransactionId': 'Id',
+            'BetNumber': 'BetNumberWager',
+            'RolledNumber': 'RolledNumberWager',
+            'BetType': 'BetTypeWager'
+        })[['Id', 'BetNumberWager', 'RolledNumberWager', 'BetTypeWager']]
+
+        # Reward merge table
+        roulette_rewards = roulettes.rename(columns={
+            'RewardTransactionId': 'Id',
+            'BetNumber': 'BetNumberReward',
+            'RolledNumber': 'RolledNumberReward',
+            'BetType': 'BetTypeReward'
+        })[['Id', 'BetNumberReward', 'RolledNumberReward', 'BetTypeReward']]
+        
+        # Transactions final merge
+        self.transactions = (
+            transactions
+            .merge(roulette_wagers, on='Id', how='left')
+            .merge(roulette_rewards, on='Id', how='left')
+        )
+        
+        # Date filtering TODO: add start date
+        if not self.transactions.empty:
+            self.transactions['Date'] = pd.to_datetime(
+                self.transactions['Date'],
+                utc=True,
+                format='ISO8601'
+            ) 
+        
+        if not self.challenges.empty:
+            self.challenges['Date'] = pd.to_datetime(
+                self.challenges['Date'],
+                utc=True,
+                format='ISO8601'
+            ) 
+
         return
 
     def get_coin_results(self):
         """Get user statistics based on coin activity."""
+        if self.transactions.empty:
+            return None
+        
         coin_results = {
             'TotalClaims' : 0,
-            'BiggestClaim' : 0,
-            'TotalGives' : 0,
+            'TotalClaimed' : 0,
+            'BestClaim' : 0,
             'TotalGiveAmount' : 0,
-            'TotalGiven' : 0,
             'TotalGivenAmount' : 0,
-            'BiggestGive' : 0,
-            'BiggestGiveTo' : '',
-            'BiggestGiven' : 0,
-            'BiggestGivenFrom' : 0
             } 
         
-        for item in self.transactions:
-            
-            if item['TransactionType'] == 1:
-                # Adds up total claims
-                coin_results['TotalClaims'] += 1
-                
-                # Changes biggest claim if larger than current
-                if item['Amount'] > coin_results['BiggestClaim']:
-                    coin_results['BiggestClaim'] = item['Amount']
+        coin_results['TotalClaims'] = (
+            (self.transactions['TransactionType'] == 1)
+            ).sum()
         
-            if item['TransactionType'] == 3:
-                
-                # Coin gives
-                if item['SenderDiscordId'] == self.user_id:
-                    coin_results['TotalGives'] += 1
-                    coin_results['TotalGiveAmount'] += item['Amount']
-                    
-                    if item['Amount'] > coin_results['BiggestGive']:
-                        coin_results['BiggestGive'] = item['Amount']
-                        coin_results['BiggestGiveTo'] = item['ReceiverDiscordId']
-                    
-                # Coin receives
-                if item['ReceiverDiscordId'] == self.user_id:
-                    coin_results['TotalGiven'] += 1
-                    coin_results['TotalGivenAmount'] += item['Amount']
-                    
-                    if item['Amount'] > coin_results['BiggestGiven']:
-                        coin_results['BiggestGiven'] = item['Amount']
-                        coin_results['BiggestGivenFrom'] = item['SenderDiscordId']
-                
+        coin_results['TotalClaimed'] = self.transactions.loc[
+            self.transactions['TransactionType'] == 1, 'Amount'
+            ].sum()
+        
+        coin_results['BestClaim'] = self.transactions.loc[
+            self.transactions['TransactionType'] == 1, 'Amount'
+            ].max()
+        
+        coin_results['TotalGiveAmount'] = self.transactions.loc[
+            (self.transactions['TransactionType'] == 3) & 
+            (self.transactions['SenderDiscordId'] == self.user_id)
+            , 'Amount'
+            ].sum()
+        
+        coin_results['TotalGivenAmount'] = self.transactions.loc[
+            (self.transactions['TransactionType'] == 3) & 
+            (self.transactions['ReceiverDiscordId'] == self.user_id)
+            , 'Amount'
+            ].sum()
+        
         return coin_results
 
     def get_challenge_results(self):
         """Get user statistics based on challenges activity."""
+        if self.challenges.empty:
+            return None
+        
         challenge_results = {
             'TotalChallenges' : 0,
             'TotalChallenger' : 0,
             'TotalChallenged' : 0,
-            'FavouriteHand' : 0,
-            'FavouriteHands' : {
-                1 : 0,
-                2 : 0,
-                3 : 0
-                }
+            'FavouriteHand' : 0
             }
+        
+        challenge_results['TotalChallenges'] = self.challenges['State'].isin([1, 2, 3]).sum()
+
+        challenge_results['TotalChallenger'] = (
+            self.challenges['State'].isin([1, 2, 3]) &
+            (self.challenges['ChallengerDiscordId'] == self.user_id)
+        ).sum()
+
+        challenge_results['TotalChallenged'] = (
+            self.challenges['State'].isin([1, 2, 3]) &
+            (self.challenges['ChallengedDiscordId'] == self.user_id)
+        ).sum()
+
                    
-        for item in self.challenges:
-            if item['State'] in [1, 2, 3]: # Completed challenges
-                challenge_results['TotalChallenges'] += 1
-                
-                if item['ChallengerDiscordId'] == self.user_id:
-                    challenge_results['TotalChallenger'] += 1
-                    
-                    # Append hands
-                    challenge_results['FavouriteHands'][item['ChallengerHand']] += 1
-                    
-                elif item['ChallengedDiscordId'] == self.user_id:
-                    challenge_results['TotalChallenged'] += 1
-                    
-                    # Append hands
-                    challenge_results['FavouriteHands'][item['ChallengedHand']] += 1
+        # Filter hands where user is involved and challenge is completed
+        challenger_hands = self.challenges.loc[
+            (self.challenges['State'].isin([1, 2, 3])) &
+            (self.challenges['ChallengerDiscordId'] == self.user_id),
+            'ChallengerHand'
+        ]
+
+        challenged_hands = self.challenges.loc[
+            (self.challenges['State'].isin([1, 2, 3])) &
+            (self.challenges['ChallengedDiscordId'] == self.user_id),
+            'ChallengedHand'
+        ]
+
+        # Combine and count
+        all_hands = pd.concat([challenger_hands, challenged_hands]).value_counts()
+
+        max_count = all_hands.max()
+        tied_hands = all_hands[all_hands == max_count].index.tolist()
+
+        # Check for draws
+        if len(tied_hands) > 1:
+            challenge_results['FavouriteHand'] = None
         
-        # Finding favourite hand
-        challenge_results['FavouriteHand'] = max(challenge_results['FavouriteHands'], key=challenge_results['FavouriteHands'].get)
-        
-        if challenge_results['FavouriteHands'][challenge_results['FavouriteHand']] > 0:
-            challenge_results['FavouriteHand'] = CHALLENGE_HANDS[challenge_results['FavouriteHand']]
+        # Winning hand
         else:
-            challenge_results['FavouriteHand'] = 'None'
+            best_hand_id = tied_hands[0]
+            challenge_results['FavouriteHand'] = best_hand_id
                 
         return challenge_results
 
     def get_roulette_results(self):
-        #TODO: roulette enums
         """Returns user statistics based on roulette activity."""
+        if self.transactions.empty:
+            return None
+        
         roulette_results = {
             'WagerCount' : 0,
             'BiggestWin' : 0,
             'BiggestLoss' : 0,
             'TotalWon' : 0,
-            'TotalLost' : 0
+            'TotalLost' : 0,
+            'FavouriteRoulette' : 0
             }
-                
-        previous_transaction = None
         
-        for item in self.transactions:
-            if item['TransactionType'] == 4:
-                
-                # Either a wager or a loss
-                if item['SenderDiscordId'] == self.user_id: 
-                    
-                    # Loss
-                    if previous_transaction and previous_transaction['SenderDiscordId'] == self.user_id:
+        roulette_results['WagerCount'] = (
+            (self.transactions['TransactionType'] == 4)
+            ).sum()
+        
+        roulette_results['TotalWon'] = self.transactions.loc[
+            (self.transactions['TransactionType'] == 4) &
+            (self.transactions['SenderDiscordId'] == '0')
+            , 'Amount'
+            ].sum()
+        
+        roulette_results['BiggestWin'] = self.transactions.loc[
+            (self.transactions['TransactionType'] == 4) &
+            (self.transactions['SenderDiscordId'] == '0')
+            , 'Amount'
+            ].max()
+        
+        roulette_results['TotalLost'] = self.transactions.loc[
+            (self.transactions['TransactionType'] == 4) &
+            (self.transactions['BetTypeReward'].isna())
+            , 'Amount'
+        ].sum()
+        
+        roulette_results['BiggestLoss'] = self.transactions.loc[
+            (self.transactions['TransactionType'] == 4) &
+            (self.transactions['BetTypeReward'].isna())
+            , 'Amount'
+        ].max()
+        
+        games_counts = self.transactions.loc[
+            (self.transactions['TransactionType'] == 4) &
+            (self.transactions['ReceiverDiscordId'] != '0')
+            , 'BetTypeWager'
+        ].value_counts()
+        
+        max_count = games_counts.max()
+        tied_games = games_counts[games_counts == max_count].index.tolist()
 
-                        if previous_transaction['Amount'] > roulette_results['BiggestLoss']:
-                            roulette_results['BiggestLoss'] = previous_transaction['Amount']
-                
-                        roulette_results['TotalLost'] += previous_transaction['Amount']
-                        
-                    # Updates wager count
-                    roulette_results['WagerCount'] += 1
-                    
-                # Wins
-                if item['ReceiverDiscordId'] == self.user_id:   
-                                
-                    # Sets new biggest win
-                    if item['Amount'] > roulette_results['BiggestWin']:
-                        roulette_results['BiggestWin'] = item['Amount']
-                       
-                    # Updates total won 
-                    roulette_results['TotalWon'] += item['Amount']
-                    
-                # Updates flag
-                previous_transaction = item
-                
-        # Checks final transaction for loss
-        final_transaction = self.transactions[-1]
-        
-        if final_transaction['SenderDiscordId'] == self.user_id:
-            if final_transaction['Amount'] > roulette_results['BiggestLoss']:
-                roulette_results['BiggestLoss'] = final_transaction['Amount']
-                
-            roulette_results['TotalLost'] += final_transaction['Amount']
-                        
-            # Updates wager count
-            roulette_results['WagerCount'] += 1 
-                    
+        if len(tied_games) > 1:
+            roulette_results['FavouriteGame'] = None
+        else:
+            roulette_results['FavouriteGame'] = tied_games[0]
+
         return roulette_results
