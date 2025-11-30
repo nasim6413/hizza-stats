@@ -6,6 +6,12 @@ TRANSACTION_TYPES = {
     4 : 'Roulette'
 }
 
+ROULETTE_TYPES = {
+    1 : 'Number',
+    2 : 'Colour',
+    3 : 'Twelve'
+}
+
 CHALLENGE_HANDS = {
     0 : 'Not Selected',
     1 : 'Rock',
