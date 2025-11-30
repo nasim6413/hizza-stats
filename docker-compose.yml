@@ -1,0 +1,9 @@
+services:
+  display:
+    container_name: hizza-stats
+    build:
+      context: .
+      dockerfile: Dockerfile
+      no_cache: true
+    image: hizza-stats
+    restart: unless-stopped
