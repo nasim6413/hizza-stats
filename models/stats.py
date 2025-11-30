@@ -166,7 +166,7 @@ class UserStats:
         # Winning hand
         else:
             best_hand_id = tied_hands[0]
-            challenge_results['FavouriteHand'] = best_hand_id
+            challenge_results['FavouriteHand'] = CHALLENGE_HANDS[best_hand_id]
                 
         return challenge_results
 
@@ -185,7 +185,8 @@ class UserStats:
             }
         
         roulette_results['WagerCount'] = (
-            (self.transactions['TransactionType'] == 4)
+            (self.transactions['TransactionType'] == 4) &
+            (self.transactions['BetTypeReward'].isna())
             ).sum()
         
         roulette_results['TotalWon'] = self.transactions.loc[
@@ -214,7 +215,7 @@ class UserStats:
         
         games_counts = self.transactions.loc[
             (self.transactions['TransactionType'] == 4) &
-            (self.transactions['ReceiverDiscordId'] != '0')
+            (self.transactions['ReceiverDiscordId'] != 0)
             , 'BetTypeWager'
         ].value_counts()
         
@@ -224,6 +225,6 @@ class UserStats:
         if len(tied_games) > 1:
             roulette_results['FavouriteGame'] = None
         else:
-            roulette_results['FavouriteGame'] = tied_games[0]
+            roulette_results['FavouriteGame'] = f'Guess {ROULETTE_TYPES[tied_games[0]]}'
 
         return roulette_results

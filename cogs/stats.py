@@ -3,7 +3,6 @@ from discord.ext import commands
 from discord.commands import Option
 from models.stats import UserStats
 from utils.helpers import fetch_username
-from utils.enums import TIMEFRAMES, CHALLENGE_HANDS
 
 class UserCog(commands.Cog):
 
@@ -74,19 +73,19 @@ class UserCog(commands.Cog):
             embed.add_field(
                 name='Roulette',
                 value=(
-                    f"* **Placed {roulette_results['WagerCount']}** wagers\n"
+                    f"* Placed **{roulette_results['WagerCount']}** wagers\n"
                     f"* Total won: **{roulette_results['TotalWon']}** coins\n"
                     f"* Biggest win: **{roulette_results['BiggestWin']}** coins\n"
                     f"* Total lost: **{roulette_results['TotalLost']}** coins\n"
                     f"* Biggest loss: **{roulette_results['BiggestLoss']}** coins\n"
-                    f"* Favourite game: **{roulette_results['FavouriteGame'] if not None else 'What a gambler...'}** coins"
+                    f"* Favourite game: **{roulette_results['FavouriteGame'] if not None else 'What a gambler...'}**"
                 ),
                 inline=False
             )
         
-        embed.set_footer(
-            text='*More stats coming soon!'
-            )
+        # embed.set_footer(
+        #     text='*More stats coming soon!'
+        #     )
 
         await ctx.respond(embed=embed)
     

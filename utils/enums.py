@@ -27,8 +27,8 @@ CHALLENGE_STATES = {
     4 : 'Expired'
 }
 
-TIMEFRAMES = {
-    'lastmonth' : 'Last Month',
-    'thismonth' : 'This Month',
-    'alltime' : 'All-Time'
-}
+# TIMEFRAMES = {
+#     'lastmonth' : 'Last Month',
+#     'thismonth' : 'This Month',
+#     'alltime' : 'All-Time'
+# }
