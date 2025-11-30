@@ -64,7 +64,7 @@ class UserCog(commands.Cog):
                     f"* Participated in **{challenge_results['TotalChallenges']}** challenges\n"
                     f"* Challenged **{challenge_results['TotalChallenger']}** users\n"
                     f"* Has been challenged by **{challenge_results['TotalChallenged']}** users\n"
-                    f"* Favourite hand: **{challenge_results['FavouriteHand'] if not None else 'Unpredictable...'}**"
+                    f"* Favourite hand: **{challenge_results['FavouriteHand'] if challenge_results['FavouriteHand'] is not None else 'Unpredictable...'}**"
                 ),
                 inline=False
             )
@@ -78,7 +78,7 @@ class UserCog(commands.Cog):
                     f"* Biggest win: **{roulette_results['BiggestWin']}** coins\n"
                     f"* Total lost: **{roulette_results['TotalLost']}** coins\n"
                     f"* Biggest loss: **{roulette_results['BiggestLoss']}** coins\n"
-                    f"* Favourite game: **{roulette_results['FavouriteGame'] if not None else 'What a gambler...'}**"
+                    f"* Favourite game: **{roulette_results['FavouriteGame'] if roulette_results['FavouriteGame'] is not None else 'What a gambler...'}**"
                 ),
                 inline=False
             )
