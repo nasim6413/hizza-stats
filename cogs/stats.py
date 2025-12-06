@@ -26,7 +26,7 @@ class UserCog(commands.Cog):
         await ctx.defer()
         
         if not user:
-            user = self.user.id
+            user = ctx.user
             
         #TODO: error handling
         user_stats = UserStats(str(user.id))
