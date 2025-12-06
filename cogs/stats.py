@@ -86,9 +86,9 @@ class UserCog(commands.Cog):
                     inline=True
                 )
 
-        embed.set_footer(
-            text='Hint: set report to `full` for a more detailed breakdown!'
-            )
+            embed.set_footer(
+                text='Hint: set report to `full` for a more detailed breakdown!'
+                )
         
         # Full report
         if mode == 'full':
