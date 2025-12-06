@@ -81,13 +81,7 @@ class UserStats:
         if self.transactions.empty:
             return None
         
-        coin_results = {
-            'TotalClaims' : 0,
-            'TotalClaimed' : 0,
-            'BestClaim' : 0,
-            'TotalGiveAmount' : 0,
-            'TotalGivenAmount' : 0,
-            } 
+        coin_results = {} 
         
         coin_results['TotalClaims'] = (
             (self.transactions['TransactionType'] == 1)
@@ -120,12 +114,7 @@ class UserStats:
         if self.challenges.empty:
             return None
         
-        challenge_results = {
-            'TotalChallenges' : 0,
-            'TotalChallenger' : 0,
-            'TotalChallenged' : 0,
-            'FavouriteHand' : 0
-            }
+        challenge_results = {}
         
         challenge_results['TotalChallenges'] = self.challenges['State'].isin([1, 2, 3]).sum()
 
@@ -160,7 +149,7 @@ class UserStats:
         tied_hands = all_hands[all_hands == max_count].index.tolist()
 
         # Check for draws
-        if len(tied_hands) > 1:
+        if len(tied_hands) != 1:
             challenge_results['FavouriteHand'] = None
         
         # Winning hand
@@ -172,17 +161,14 @@ class UserStats:
 
     def get_roulette_results(self):
         """Returns user statistics based on roulette activity."""
-        if self.transactions.empty:
+        if self.transactions.loc[
+            (self.transactions['TransactionType'] == 4) &
+            (self.transactions['SenderDiscordId'] == self.user_id)
+            , 'Amount'
+            ].sum() == 0:
             return None
         
-        roulette_results = {
-            'WagerCount' : 0,
-            'BiggestWin' : 0,
-            'BiggestLoss' : 0,
-            'TotalWon' : 0,
-            'TotalLost' : 0,
-            'FavouriteRoulette' : 0
-            }
+        roulette_results = {}
         
         roulette_results['WagerCount'] = (
             (self.transactions['TransactionType'] == 4) &
@@ -222,9 +208,9 @@ class UserStats:
         max_count = games_counts.max()
         tied_games = games_counts[games_counts == max_count].index.tolist()
 
-        if len(tied_games) > 1:
+        if len(tied_games) != 1:
             roulette_results['FavouriteGame'] = None
         else:
-            roulette_results['FavouriteGame'] = f'Guess {ROULETTE_TYPES[tied_games[0]]}'
-
+            roulette_results['FavouriteGame'] = f'Guess{ROULETTE_TYPES[tied_games[0]]}'
+            
         return roulette_results
