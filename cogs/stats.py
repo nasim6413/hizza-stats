@@ -16,7 +16,7 @@ class UserCog(commands.Cog):
         user = Option(discord.Member, 
                      "Pick a user", 
                      required=False,
-                     default=None),
+                     default=False),
         mode = Option(str,
                       "Pick your stats mode",
                       choices=["compact", "full"],
@@ -25,6 +25,9 @@ class UserCog(commands.Cog):
         ):
         await ctx.defer()
         
+        if not user:
+            user = self.user.id
+            
         #TODO: error handling
         user_stats = UserStats(str(user.id))
             
