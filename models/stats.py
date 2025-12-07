@@ -113,7 +113,7 @@ class UserStats:
         """Get user statistics based on challenges activity."""
         if self.challenges.loc[
             (self.challenges['State'].isin([1, 2, 3]))
-            , 'Amount'
+            , 'Wager'
             ].sum() == 0:
             return None
         
