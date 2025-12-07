@@ -111,7 +111,10 @@ class UserStats:
 
     def get_challenge_results(self):
         """Get user statistics based on challenges activity."""
-        if self.challenges.empty:
+        if self.challenges.loc[
+            (self.challenges['State'].isin([1, 2, 3]))
+            , 'Amount'
+            ].sum() == 0:
             return None
         
         challenge_results = {}
