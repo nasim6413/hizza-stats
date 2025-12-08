@@ -1,5 +1,6 @@
 import requests
 import pandas as pd
+import datetime as dt
 from utils.helpers import fetch_months
 from utils.enums import *
 
@@ -8,12 +9,17 @@ class UserStats:
         self.user_id = user_id
         self.transactions = []
         self.challenges = []
+        self.account = []
         
         transactions = requests.get('http://localhost:8080/api/transactions').json()
         challenges = requests.get('http://localhost:8080/api/challenges').json()
         roulettes = requests.get('http://localhost:8080/api/roulette').json()
+        accounts = requests.get('http://localhost:8080/api/accounts').json()
         
         # User filtering
+        account = [acc for acc in accounts if acc['DiscordId'] == self.user_id]
+        self.account = pd.DataFrame(account)
+        
         transactions = [
             t for t in transactions if 
                 (t['SenderDiscordId'] == self.user_id) or 
@@ -39,24 +45,16 @@ class UserStats:
         # Wager merge table
         roulette_wagers = roulettes.rename(columns={
             'WageredTransactionId': 'Id',
+            'RewardTransactionId': 'Reward',
             'BetNumber': 'BetNumberWager',
             'RolledNumber': 'RolledNumberWager',
             'BetType': 'BetTypeWager'
-        })[['Id', 'BetNumberWager', 'RolledNumberWager', 'BetTypeWager']]
-
-        # Reward merge table
-        roulette_rewards = roulettes.rename(columns={
-            'RewardTransactionId': 'Id',
-            'BetNumber': 'BetNumberReward',
-            'RolledNumber': 'RolledNumberReward',
-            'BetType': 'BetTypeReward'
-        })[['Id', 'BetNumberReward', 'RolledNumberReward', 'BetTypeReward']]
+        })[['Id', 'Reward', 'BetNumberWager', 'RolledNumberWager', 'BetTypeWager']]
         
         # Transactions final merge
         self.transactions = (
             transactions
             .merge(roulette_wagers, on='Id', how='left')
-            .merge(roulette_rewards, on='Id', how='left')
         )
         
         # Date filtering TODO: add start date
@@ -72,7 +70,13 @@ class UserStats:
                 self.challenges['Date'],
                 utc=True,
                 format='ISO8601'
-            ) 
+            )
+            
+        self.account['LastClaimDate'] = pd.to_datetime(
+            self.challenges['Date'],
+            utc=True,
+            format='ISO8601'
+        ) 
 
         return
 
@@ -175,7 +179,7 @@ class UserStats:
         
         roulette_results['WagerCount'] = (
             (self.transactions['TransactionType'] == 4) &
-            (self.transactions['BetTypeReward'].isna())
+            (self.transactions['SenderDiscordId'] == self.user_id)
             ).sum()
         
         roulette_results['TotalWon'] = self.transactions.loc[
@@ -192,13 +196,15 @@ class UserStats:
         
         roulette_results['TotalLost'] = self.transactions.loc[
             (self.transactions['TransactionType'] == 4) &
-            (self.transactions['BetTypeReward'].isna())
+            (self.transactions['SenderDiscordId'] == self.user_id) &
+            (self.transactions['Reward'].isna())
             , 'Amount'
         ].sum()
         
         roulette_results['BiggestLoss'] = self.transactions.loc[
             (self.transactions['TransactionType'] == 4) &
-            (self.transactions['BetTypeReward'].isna())
+            (self.transactions['SenderDiscordId'] == self.user_id) &
+            (self.transactions['Reward'].isna())
             , 'Amount'
         ].max()
         
@@ -217,3 +223,106 @@ class UserStats:
             roulette_results['FavouriteGame'] = f'Guess{ROULETTE_TYPES[tied_games[0]]}'
             
         return roulette_results
+    
+    # def get_l7d_balances(self):
+    #     """Returns user balance in the last 7 days."""
+        
+    #     today = dt.date.today()
+    #     start_date = today - dt.timedelta(days=7)
+        
+    #     # Convert to pandas Timestamps
+    #     start_date_ts = pd.Timestamp(start_date).tz_localize('UTC')
+    #     today_ts = pd.Timestamp(today).tz_localize('UTC')
+
+    #     # Filter transactions for the last 7 days
+    #     transactions_l7d = self.transactions.loc[
+    #         (self.transactions['Date'] >= start_date_ts) &
+    #         (self.transactions['Date'] <  today_ts + pd.Timedelta(days=1))
+    #     ]
+        
+    #     current_balance = int(self.account['Balance'].iloc[0])
+        
+    #     # Initialise loop
+    #     running_balance = current_balance
+        
+    #     l7d_balances = {}
+        
+    #     for i in range(7):
+    #         # Create date row
+    #         date = today - dt.timedelta(days=i)
+    #         l7d_balances[date] = {'start_balance' : 0, 'end_balance' : 0}
+            
+    #         prev_date = date + dt.timedelta(days=1)
+
+    #         # End balance of day
+    #         if prev_date in l7d_balances:
+    #             l7d_balances[date]['end_balance'] = l7d_balances[prev_date]['start_balance']
+    #         else:
+    #             l7d_balances[date]['end_balance'] = current_balance
+                
+    #         # Claim add
+    #         coins_claimed = transactions_l7d.loc[
+    #             (transactions_l7d['Date'].dt.date == date) &
+    #             (transactions_l7d['TransactionType'].isin([0, 1])),
+    #             'Amount'
+    #             ].sum()
+            
+    #         coins_given = transactions_l7d.loc[
+    #             (transactions_l7d['Date'].dt.date == date) &
+    #             (transactions_l7d['TransactionType'] == 3) &
+    #             (transactions_l7d['SenderDiscordId'] == self.user_id),
+    #             'Amount'
+    #             ].sum()
+            
+    #         coins_received = transactions_l7d.loc[
+    #             (transactions_l7d['Date'].dt.date == date) &
+    #             (transactions_l7d['TransactionType'] == 3) &
+    #             (transactions_l7d['ReceiverDiscordId'] == self.user_id),
+    #             'Amount'
+    #             ].sum()
+                        
+    #         # Challenge add/decrease
+    #         challenges_won = transactions_l7d.loc[
+    #             (transactions_l7d['Date'].dt.date == date) &
+    #             (transactions_l7d['TransactionType'] == 2) & 
+    #             (transactions_l7d['ReceiverDiscordId'] == self.user_id),
+    #             'Amount'
+    #             ].sum()
+            
+    #         challenges_lost = transactions_l7d.loc[
+    #             (transactions_l7d['Date'].dt.date == date) &
+    #             (transactions_l7d['TransactionType'] == 2) & 
+    #             (transactions_l7d['SenderDiscordId'] == self.user_id),
+    #             'Amount'
+    #             ].sum()
+            
+    #         # Roulette add/decrease
+    #         roulettes_won = transactions_l7d.loc[
+    #             (transactions_l7d['Date'].dt.date == date) &
+    #             (transactions_l7d['TransactionType'] == 4) & 
+    #             (transactions_l7d['SenderDiscordId'] == '0'),
+    #             'Amount'
+    #             ].sum()
+            
+    #         roulettes_lost = transactions_l7d.loc[
+    #             (transactions_l7d['Date'].dt.date == date) &
+    #             (transactions_l7d['TransactionType'] == 4) & 
+    #             (transactions_l7d['SenderDiscordId'] == self.user_id) &
+    #             (transactions_l7d['Reward'].isna()),
+    #             'Amount'
+    #             ].sum()
+            
+    #         # Calculate start day balance
+    #         l7d_balances[date]['start_balance'] = (
+    #             l7d_balances[date]['end_balance']
+    #             - coins_claimed
+    #             - coins_received
+    #             + coins_given
+    #             - challenges_won
+    #             + challenges_lost
+    #             - roulettes_won
+    #             + roulettes_lost
+    #         )
+            
+    #     print(l7d_balances)
+    #     return l7d_balances
