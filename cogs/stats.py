@@ -72,6 +72,7 @@ class UserCog(commands.Cog):
                     name='Challenge ⚔️',
                     value=(
                         f"* **{challenge_results['TotalChallenges']}** challenges\n"
+                        f"* KDR: **{challenge_results['WinLossRatio']}**\n"
                         f"* #Team{challenge_results['FavouriteHand'] if challenge_results['FavouriteHand'] is not None else 'Unpredictable'}"
                     ),
                     inline=True
@@ -82,8 +83,7 @@ class UserCog(commands.Cog):
                     name='Roulette 🎰',
                     value=(
                         f"* **{roulette_results['WagerCount']}** wagers\n"
-                        f"* Best win: **{roulette_results['BiggestWin']}** coins\n"
-                        f"* Worst loss: **{roulette_results['BiggestLoss']}** coins\n"
+                        f"* W/L: **{roulette_results['WinLossRatio']}**\n"
                         f"* #Team{roulette_results['FavouriteGame'] if roulette_results['FavouriteGame'] is not None else 'Unpredictable'}"
                     ),
                     inline=True

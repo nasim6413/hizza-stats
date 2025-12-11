@@ -123,17 +123,36 @@ class UserStats:
         
         challenge_results = {}
         
+        # Calculate challenge statistics
         challenge_results['TotalChallenges'] = self.challenges['State'].isin([1, 2, 3]).sum()
 
         challenge_results['TotalChallenger'] = (
-            self.challenges['State'].isin([1, 2, 3]) &
-            (self.challenges['ChallengerDiscordId'] == self.user_id)
+            (self.challenges['ChallengerDiscordId'] == self.user_id) &
+            (self.challenges['ChallengedDiscordId'] != '0')
         ).sum()
 
         challenge_results['TotalChallenged'] = (
-            self.challenges['State'].isin([1, 2, 3]) &
-            (self.challenges['ChallengedDiscordId'] == self.user_id)
+            self.challenges['ChallengedDiscordId'] == self.user_id
         ).sum()
+
+        # Win/Loss Ratio
+        challenge_wins = (
+            ((self.challenges['State'] == 1) &
+            (self.challenges['ChallengerDiscordId'] == self.user_id)).sum()
+            +
+            ((self.challenges['State'] == 2) &
+            (self.challenges['ChallengedDiscordId'] == self.user_id)).sum()
+        )
+
+        challenge_losses = (
+            ((self.challenges['State'] == 1) &
+            (self.challenges['ChallengedDiscordId'] == self.user_id)).sum()
+            +
+            ((self.challenges['State'] == 2) &
+            (self.challenges['ChallengerDiscordId'] == self.user_id)).sum()
+        )
+
+        challenge_results['WinLossRatio'] = round((challenge_wins / challenge_losses), 1) if challenge_losses > 0 else None
 
                    
         # Filter hands where user is involved and challenge is completed
@@ -208,6 +227,21 @@ class UserStats:
             , 'Amount'
         ].max()
         
+        # Win/Loss Ratio
+        roulette_wins = (
+            ((self.transactions['TransactionType'] == 4) &
+            (self.transactions['SenderDiscordId'] == '0')).sum()
+        )
+        
+        roulette_losses = (
+            ((self.transactions['TransactionType'] == 4) &
+            (self.transactions['SenderDiscordId'] == self.user_id) &
+            (self.transactions['Reward'].isna())).sum()
+        )
+
+        roulette_results['WinLossRatio'] = round((roulette_wins / roulette_losses), 1) if roulette_losses > 0 else None
+
+        # Favourite game
         games_counts = self.transactions.loc[
             (self.transactions['TransactionType'] == 4) &
             (self.transactions['ReceiverDiscordId'] != 0)
