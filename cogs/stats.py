@@ -1,11 +1,7 @@
 import discord
-import matplotlib.pyplot as plt
-import io
-from matplotlib import style
 from discord.ext import commands
 from discord.commands import Option
 from models.stats import UserStats
-from utils.helpers import fetch_username
 
 class UserCog(commands.Cog):
 
@@ -40,10 +36,6 @@ class UserCog(commands.Cog):
         coin_results = user_stats.get_coin_results()
         challenge_results = user_stats.get_challenge_results()
         roulette_results = user_stats.get_roulette_results()
-     
-        # # Fetching usernames from user_id
-        # biggest_give_to = await fetch_username(self.bot, coin_results['BiggestGiveTo'])
-        # biggest_given_from = await fetch_username(self.bot, coin_results['BiggestGivenFrom'])
         
         # Creating embed
         embed = discord.Embed(
@@ -83,7 +75,7 @@ class UserCog(commands.Cog):
                     name='Roulette 🎰',
                     value=(
                         f"* **{roulette_results['WagerCount']}** wagers\n"
-                        f"* W/L: **{roulette_results['WinLossRatio']}**\n"
+                        f"* WLR: **{roulette_results['WinLossRatio']}**\n"
                         f"* #Team{roulette_results['FavouriteGame'] if roulette_results['FavouriteGame'] is not None else 'Unpredictable'}"
                     ),
                     inline=True
@@ -92,8 +84,6 @@ class UserCog(commands.Cog):
             embed.set_footer(
                 text='Hint: set report to `full` for a more detailed breakdown!'
                 )
-        
-            await ctx.respond(embed=embed)
             
         # Full report
         if mode == 'full':
@@ -135,36 +125,8 @@ class UserCog(commands.Cog):
                     ),
                     inline=False
                 )
-                
-            # l7d_balances = user_stats.get_l7d_balances()   
-            
-            # dates = sorted(l7d_balances.keys()) # Sorts dates
-            # end_vals   = [int(l7d_balances[d]["end_balance"])   for d in dates]
+        
+        await ctx.respond(embed=embed)
 
-            # plt.figure(figsize=(10, 5))
-            
-            # hex_colour = f"#{user.color.value:06x}"
-            # plt.plot(dates, end_vals, color=hex_colour)
-
-            # plt.xlabel("Date")
-            # plt.ylabel("Balance by End of Day")
-            # plt.title("Hizza Balance Last Week")
-            # plt.xticks(rotation=45)
-            # plt.tight_layout()
-            # plt.style.use('ggplot')
-            
-            # # Save to bytes buffer instead of file
-            # buf = io.BytesIO()
-            # plt.savefig(buf, format="png")
-            # plt.close()
-            # buf.seek(0)
-
-            # # Create discord File
-            # file = discord.File(buf, filename="end_balance.png")
-            
-            # embed.set_image(url="attachment://end_balance.png")
-
-            await ctx.respond(embed=embed)
-    
 def setup(bot):
     bot.add_cog(UserCog(bot))
