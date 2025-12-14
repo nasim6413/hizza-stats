@@ -7,3 +7,4 @@ services:
       no_cache: true
     image: hizza-stats
     restart: unless-stopped
+    network_mode: host
