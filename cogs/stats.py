@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.commands import Option
-from models.stats import UserStats
+from models import user_stats
 
 class UserCog(commands.Cog):
 
@@ -28,14 +28,13 @@ class UserCog(commands.Cog):
             user = ctx.user
             
         #TODO: error handling
-        user_stats = UserStats(str(user.id))
             
         avatar_url = user.avatar.url
         user_name = user.name
         
-        coin_results = user_stats.get_coin_results()
-        challenge_results = user_stats.get_challenge_results()
-        roulette_results = user_stats.get_roulette_results()
+        coin_results = user_stats.get_coin_results(str(user.id))
+        challenge_results = user_stats.get_challenge_results(str(user.id))
+        roulette_results = user_stats.get_roulette_results(str(user.id))
         
         # Creating embed
         embed = discord.Embed(
@@ -53,7 +52,7 @@ class UserCog(commands.Cog):
                     name='Coin 🪙',
                     value=(
                         f"* **{coin_results['TotalClaims']}** coin claims\n"
-                        f"* Claimed **{coin_results['TotalClaimed']}** coins total \n"
+                        f"* Average claim: **{coin_results['AverageClaim']}** coins \n"
                         f"* Best claim: **{coin_results['BestClaim']}** coins\n"
                     ),
                     inline=True
