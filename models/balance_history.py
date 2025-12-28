@@ -1,6 +1,72 @@
 import requests
 import pandas as pd
 
+def get_transaction_history(user_id):
+
+    transactions = requests.get('http://localhost:8080/api/transactions').json()
+    accounts = requests.get('http://localhost:8080/api/accounts').json()
+    
+    transactions = pd.DataFrame([
+        t for t in transactions if 
+            (t['SenderDiscordId'] == user_id) or 
+            (t['ReceiverDiscordId'] == user_id)
+        ]
+    )
+    
+    if not transactions.empty:
+        transactions['Date'] = pd.to_datetime(
+            transactions['Date'],
+            utc=True,
+            format='ISO8601'
+        ) 
+        
+        transactions = (
+            transactions
+            .sort_values(by='Date', ascending=False)
+            .iloc[:99]
+        )
+
+    else:
+        return None
+    
+    # Get current balance
+    account = pd.DataFrame([acc for acc in accounts if acc['DiscordId'] == user_id])
+    
+    current_balance = int(account['Balance'].iloc[0])
+
+    l100_transactions = {}
+    
+    running_balance = current_balance
+    count = 0
+    l100_transactions[count] = running_balance # starting balance
+
+    for i, j in transactions.iterrows():
+        if j['TransactionType'] in (0, 1):
+            running_balance -= j['Amount']
+        
+        if j['TransactionType'] == 3 and j['SenderDiscordId'] == user_id:
+            running_balance += j['Amount']
+
+        if j['TransactionType'] == 3 and j['ReceiverDiscordId'] == user_id:
+            running_balance -= j['Amount']
+            
+        if j['TransactionType'] == 2 and j['SenderDiscordId'] == user_id and j['ReceiverDiscordId'] != '0':
+            running_balance += j['Amount']
+            
+        if j['TransactionType'] == 2 and j['ReceiverDiscordId'] == user_id:
+            running_balance -= j['Amount']
+
+        if j['TransactionType'] == 4 and j['SenderDiscordId'] == '0':
+            running_balance -= j['Amount']
+            
+        if j['TransactionType'] == 4 and j['SenderDiscordId'] == user_id:
+            running_balance += j['Amount']
+
+        count += 1
+        l100_transactions[count] = running_balance
+
+    return l100_transactions
+
 def get_historical_balance(user_id):
     
     transactions = requests.get('http://localhost:8080/api/transactions').json()
@@ -24,12 +90,6 @@ def get_historical_balance(user_id):
     
     # Get current balance
     account = pd.DataFrame([acc for acc in accounts if acc['DiscordId'] == user_id])
-    
-    account['LastClaimDate'] = pd.to_datetime(
-        account['LastClaimDate'],
-        utc=True,
-        format='ISO8601'
-    ) 
     
     today = pd.Timestamp.utcnow().normalize()
     current_balance = int(account['Balance'].iloc[0])
@@ -106,7 +166,7 @@ def get_historical_balance(user_id):
         }
 
         running_end_balance = start_balance
-        
+
     return l30d_balances
 
 def get_top5_historical_balance():

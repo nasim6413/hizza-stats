@@ -1,9 +1,9 @@
 import discord
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 import io
 from discord.ext import commands
 from discord.commands import Option
+from datetime import timedelta
 from models import balance_history
 from utils.helpers import fetch_username
 
@@ -12,12 +12,17 @@ class BalanceCog(commands.Cog):
     def __init__(self, bot): 
         self.bot = bot
         
-    balance = discord.SlashCommandGroup("balancehistory", "Check balances for the past 30 days!")
+    balance = discord.SlashCommandGroup("balancehistory", "Check balance histories.")
 
-    @balance.command(description='Check a user\'s balance for the past 30 days.')
+    @balance.command(description='Check a user\'s balance history.')
     async def user(
         self, 
         ctx, 
+        mode = Option(str,
+                      "Pick balance history mode",
+                      choices=["l30days", "l100transactions"],
+                      required=False,
+                      default="l30days"),
         user = Option(discord.Member, 
                     "Pick a user", 
                     required=False,
@@ -32,59 +37,121 @@ class BalanceCog(commands.Cog):
         avatar_url = user.avatar.url
         user_name = user.name
         
-        # Plot historical balance l30d
-        l30d_balances = balance_history.get_historical_balance(str(user.id))   
-        
-        dates = sorted(l30d_balances.keys()) # Sorts dates
-        end_vals   = [int(l30d_balances[d]["end_balance"])   for d in dates]
-
-        plt.figure(figsize=(10, 6), facecolor='none')
-        
-        ax = plt.gca()
-        ax.set_facecolor('none')  # transparent axes background
-        ax.spines['bottom'].set_color('white')
-        ax.spines['top'].set_color('white') 
-        ax.spines['left'].set_color('white') 
-        ax.spines['right'].set_color('white')
-
-        # Plot line with a bright color
-        hex_colour = f"#{user.color.value:06x}"
-        plt.plot(dates, end_vals, color=hex_colour, linewidth=2)
-
-        # Set all ticks
-        ax.xaxis.set_major_locator(mdates.DayLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
-        plt.xticks(rotation=45, ha='right', color='white')
-
-        # Labels
-        ax.set_xlabel("Date", color='white')
-        ax.set_ylabel("Balance by End of Day", color='white')
-        ax.set_title("Hizza Balance Last 30 Days", color='white')
-        ax.tick_params(axis='y', colors='white')
-        ax.grid(True, color='gray', alpha=0.3)
-
-        plt.tight_layout()
-                
-        # Save to bytes buffer instead of file
-        buf = io.BytesIO()
-        plt.savefig(buf, format="png", transparent=True)
-        plt.close()
-        buf.seek(0)
-
-        # Create discord File
-        file = discord.File(buf, filename="end_balance.png")
-        
-        # Creating embed
-        embed = discord.Embed(
-                title=f'Hizza Stats: {user_name}',
-                description=f'User balance history for the past 30 days.',
-                color=discord.Colour.blurple()
-                )
-
-        embed.set_thumbnail(url=avatar_url)
+        if mode == "l30days":
+            # Plot historical balance l30d
+            l30d_balances = balance_history.get_historical_balance(str(user.id))   
             
-        embed.set_image(url="attachment://end_balance.png")
+            dates = sorted(l30d_balances.keys()) # Sorts dates
+            end_vals = [int(l30d_balances[d]["end_balance"]) for d in dates]
 
+            plt.figure(figsize=(10, 6), facecolor='none')
+            
+            ax = plt.gca()
+            ax.set_facecolor('none')  # transparent axes background
+            ax.spines['bottom'].set_color('white')
+            ax.spines['top'].set_color('white') 
+            ax.spines['left'].set_color('white') 
+            ax.spines['right'].set_color('white')
+
+            # Plot line with a bright color
+            hex_colour = f"#{user.color.value:06x}"
+            plt.plot(dates, end_vals, color=hex_colour, linewidth=2)
+
+            # Starts and ends x axis at correct dates
+            pad = timedelta(days=1)
+            ax.set_xlim(dates[0] - pad, dates[-1] + pad)
+            
+            # Set x ticks as dates
+            ax.set_xticks(dates)  # only real dates get labels
+            ax.set_xticklabels([d.strftime('%Y-%m-%d') for d in dates], rotation=45, ha='right', color='white')
+            plt.xticks(rotation=45, ha='right', color='white')
+
+            # Labels
+            ax.set_xlabel("Date", color='white')
+            ax.set_ylabel("Balance by End of Day", color='white')
+            ax.set_title("Hizza Balance Last 30 Days", color='white')
+            ax.tick_params(axis='y', colors='white')
+            ax.grid(True, color='gray', alpha=0.3)
+
+            plt.tight_layout()
+                    
+            # Save to bytes buffer instead of file
+            buf = io.BytesIO()
+            plt.savefig(buf, format="png", transparent=True)
+            plt.close()
+            buf.seek(0)
+
+            # Create discord File
+            file = discord.File(buf, filename="end_balance.png")
+            
+            # Creating embed
+            embed = discord.Embed(
+                    title=f'Hizza Stats: {user_name}',
+                    description=f'User balance history for the past 30 days.',
+                    color=discord.Colour.blurple()
+                    )
+
+            embed.set_thumbnail(url=avatar_url)
+                
+            embed.set_image(url="attachment://end_balance.png")
+        
+        if mode == "l100transactions":
+            l100transactions = balance_history.get_transaction_history(str(user.id))
+
+            x = range(len(l100transactions))
+            balances = [int(l100transactions[i]) for i in x]
+
+            plt.figure(figsize=(10, 6), facecolor='none')
+            
+            ax = plt.gca()
+            ax.set_facecolor('none')  # transparent axes background
+            ax.spines['bottom'].set_color('white')
+            ax.spines['top'].set_color('white') 
+            ax.spines['left'].set_color('white') 
+            ax.spines['right'].set_color('white')
+
+            # Plot line with a bright color
+            hex_colour = f"#{user.color.value:06x}"
+            
+            plt.plot(
+                x,
+                balances,
+                color=hex_colour,
+                linewidth=2
+            )
+
+            plt.xticks(ha='right', color='white')
+            
+            # Labels
+            ax.set_xlabel("Transactions", color='white')
+            ax.set_ylabel("Balance by Last 100 Transactions", color='white')
+            ax.invert_xaxis()
+            ax.set_title("Hizza Balance Last 100 Transactions", color='white')
+            ax.tick_params(axis='y', colors='white')
+            ax.grid(True, color='gray', alpha=0.3)
+
+            plt.tight_layout()
+                    
+            # Save to bytes buffer instead of file
+            buf = io.BytesIO()
+            plt.savefig(buf, format="png", transparent=True)
+            plt.close()
+            buf.seek(0)
+
+            # Create discord File
+            file = discord.File(buf, filename="end_balance.png")
+            
+            # Creating embed
+            embed = discord.Embed(
+                    title=f'Hizza Stats: {user_name}',
+                    description=f'User balance history for the past 100 transactions.',
+                    color=discord.Colour.blurple()
+                    )
+
+            embed.set_thumbnail(url=avatar_url)
+                
+            embed.set_image(url="attachment://end_balance.png")
+            
         await ctx.respond(embed=embed, file=file)
 
     @balance.command(description='Check current leaderboard top 5 user balances for the past 30 days.')
@@ -118,9 +185,13 @@ class BalanceCog(commands.Cog):
             username = await fetch_username(self.bot, user_id)
             plt.plot(dates, end_vals, linewidth=2, label=username)
 
-        # X-axis formatting
-        ax.xaxis.set_major_locator(mdates.DayLocator())
-        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m-%d'))
+        # Starts and ends x axis at correct dates
+        pad = timedelta(days=1)
+        ax.set_xlim(dates[0] - pad, dates[-1] + pad)
+        
+        # Set x ticks as dates
+        ax.set_xticks(dates)  # only real dates get labels
+        ax.set_xticklabels([d.strftime('%Y-%m-%d') for d in dates], rotation=45, ha='right', color='white')
         plt.xticks(rotation=45, ha='right', color='white')
 
         # Labels & title

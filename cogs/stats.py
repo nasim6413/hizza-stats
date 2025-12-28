@@ -12,15 +12,15 @@ class UserCog(commands.Cog):
     async def stats(
         self, 
         ctx, 
-        user = Option(discord.Member, 
-                     "Pick a user", 
-                     required=False,
-                     default=False),
         mode = Option(str,
                       "Pick your stats mode",
                       choices=["compact", "full"],
                       required=False,
-                      default="compact")
+                      default="compact"),
+        user = Option(discord.Member, 
+                     "Pick a user", 
+                     required=False,
+                     default=False)
         ):
         await ctx.defer()
         
