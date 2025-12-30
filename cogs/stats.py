@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from discord.commands import Option
 from models import user_stats
+from utils.helpers import validate_user
 
 class UserCog(commands.Cog):
 
@@ -20,15 +21,19 @@ class UserCog(commands.Cog):
         user = Option(discord.Member, 
                      "Pick a user", 
                      required=False,
-                     default=False)
+                     default=None)
         ):
+        
+        # User validation
+        user = user or ctx.user
+            
+        if not await validate_user(user):
+            await ctx.respond("User does not have a Hizza account!", ephemeral=True)
+            return
+            
         await ctx.defer()
         
-        if not user:
-            user = ctx.user
-            
-        #TODO: error handling
-            
+        # Retrieve user data
         avatar_url = user.avatar.url
         user_name = user.name
         

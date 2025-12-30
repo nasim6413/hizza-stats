@@ -107,65 +107,70 @@ def get_historical_balance(user_id):
             (transactions['Date'] >= day_start) &
             (transactions['Date'] < day_end)
         ]
+        
+        if not day_tx.empty:
 
-        coins_claimed = day_tx.loc[
-            day_tx['TransactionType'].isin([0, 1]),
-            'Amount'
-        ].sum()
+            coins_claimed = day_tx.loc[
+                day_tx['TransactionType'].isin([0, 1]),
+                'Amount'
+            ].sum()
 
-        coins_given = day_tx.loc[
-            (day_tx['TransactionType'] == 3) &
-            (day_tx['SenderDiscordId'] == user_id),
-            'Amount'
-        ].sum()
+            coins_given = day_tx.loc[
+                (day_tx['TransactionType'] == 3) &
+                (day_tx['SenderDiscordId'] == user_id),
+                'Amount'
+            ].sum()
 
-        coins_received = day_tx.loc[
-            (day_tx['TransactionType'] == 3) &
-            (day_tx['ReceiverDiscordId'] == user_id),
-            'Amount'
-        ].sum()
+            coins_received = day_tx.loc[
+                (day_tx['TransactionType'] == 3) &
+                (day_tx['ReceiverDiscordId'] == user_id),
+                'Amount'
+            ].sum()
 
-        challenges_won = day_tx.loc[
-            (day_tx['TransactionType'] == 2) &
-            (day_tx['ReceiverDiscordId'] == user_id),
-            'Amount'
-        ].sum()
+            challenges_won = day_tx.loc[
+                (day_tx['TransactionType'] == 2) &
+                (day_tx['ReceiverDiscordId'] == user_id),
+                'Amount'
+            ].sum()
 
-        challenges_lost = day_tx.loc[
-            (day_tx['TransactionType'] == 2) &
-            (day_tx['SenderDiscordId'] == user_id) &
-            (day_tx['ReceiverDiscordId'] != '0'), # Coin lock filter
-            'Amount'
-        ].sum()
+            challenges_lost = day_tx.loc[
+                (day_tx['TransactionType'] == 2) &
+                (day_tx['SenderDiscordId'] == user_id) &
+                (day_tx['ReceiverDiscordId'] != '0'), # Coin lock filter
+                'Amount'
+            ].sum()
 
-        roulettes_won = day_tx.loc[
-            (day_tx['TransactionType'] == 4) &
-            (day_tx['SenderDiscordId'] == '0'),
-            'Amount'
-        ].sum()
+            roulettes_won = day_tx.loc[
+                (day_tx['TransactionType'] == 4) &
+                (day_tx['SenderDiscordId'] == '0'),
+                'Amount'
+            ].sum()
 
-        roulettes_lost = day_tx.loc[
-            (day_tx['TransactionType'] == 4) &
-            (day_tx['SenderDiscordId'] == user_id),
-            'Amount'
-        ].sum()
+            roulettes_lost = day_tx.loc[
+                (day_tx['TransactionType'] == 4) &
+                (day_tx['SenderDiscordId'] == user_id),
+                'Amount'
+            ].sum()
 
-        start_balance = running_end_balance - (
-            coins_claimed    
-            + coins_received 
-            + challenges_won 
-            + roulettes_won  
-            - coins_given    
-            - challenges_lost
-            - roulettes_lost 
-        )
+            start_balance = running_end_balance - (
+                coins_claimed    
+                + coins_received 
+                + challenges_won 
+                + roulettes_won  
+                - coins_given    
+                - challenges_lost
+                - roulettes_lost 
+            )
 
-        l30d_balances[day.date()] = {
-            'start_balance': int(start_balance),
-            'end_balance': int(running_end_balance)
-        }
+            l30d_balances[day.date()] = {
+                'start_balance': int(start_balance),
+                'end_balance': int(running_end_balance)
+            }
 
-        running_end_balance = start_balance
+            running_end_balance = start_balance
+            
+        else:
+            pass
 
     return l30d_balances
 

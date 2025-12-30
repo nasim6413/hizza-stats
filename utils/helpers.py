@@ -1,5 +1,14 @@
 import discord
-from datetime import datetime
+import requests
+
+async def validate_user(user):
+    accounts = requests.get('http://localhost:8080/api/accounts').json()
+
+    account = [acc for acc in accounts if acc['DiscordId'] == str(user.id)]
+    if not account:
+        return False
+    
+    return True
 
 async def fetch_username(bot: discord.Bot, user_id):
     if not user_id:
@@ -10,24 +19,13 @@ async def fetch_username(bot: discord.Bot, user_id):
             return "Nobody"
     else:
             return username.name
-        
-def fetch_months(timeframe):
-    today = datetime.now()
-    
-    if timeframe == 'thismonth':
-        month = today.month
-        year = today.year
 
-    elif timeframe == 'lastmonth':
-        if today.month == 1:  # January → go to previous December
-            month = 12
-            year = today.year - 1
-        else:
-            month = today.month - 1
-            year = today.year
-            
-    else:
-        month = None
-        year = None
-        
-    return month, year
+def whiteify_plot(ax):
+    ax.set_facecolor('none')
+    for spine in ax.spines.values():
+        spine.set_color('white')
+    
+    ax.tick_params(axis='y', colors='white')
+    ax.grid(True, color='gray', alpha=0.3)
+    
+    return ax
