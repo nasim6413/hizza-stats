@@ -4,7 +4,7 @@ import io
 from discord.ext import commands
 from discord.commands import Option
 from datetime import timedelta
-from models import balance_history
+from models import balance_history, leaderboard
 from utils.helpers import *
 
 class BalanceCog(commands.Cog):
@@ -126,7 +126,7 @@ class BalanceCog(commands.Cog):
         await ctx.defer()
         
         # Plot historical balance l30d for top 5 users
-        top5_balances = balance_history.get_top5_historical_balance()
+        top5_balances = leaderboard.get_top5_historical_balance()
 
         plt.figure(figsize=(10, 6), facecolor='none')
         ax = plt.gca()

@@ -169,16 +169,3 @@ def get_historical_balance(user_id):
         running_end_balance = start_balance
 
     return l30d_balances
-
-def get_top5_historical_balance():
-    accounts = requests.get('http://localhost:8080/api/accounts').json()
-    
-    accounts = pd.DataFrame([acc for acc in accounts])
-
-    top5 = accounts.nlargest(5, 'Balance')['DiscordId'].values.tolist()
-    
-    top5_balances = {}
-    for user in top5:
-        top5_balances[user] = get_historical_balance(user)
-        
-    return top5_balances
