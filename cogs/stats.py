@@ -34,8 +34,13 @@ class UserCog(commands.Cog):
         await ctx.defer()
         
         # Retrieve user data
-        avatar_url = user.avatar.url
-        user_name = user.name
+        avatar_url = user.display_avatar.url
+        user_name = user.display_name
+        
+        if user.colour != discord.Colour.default():
+            embed_colour = user.colour.value
+        else:
+            embed_colour = discord.Color.from_rgb(52, 152, 219)
         
         coin_results = user_stats.get_coin_results(str(user.id))
         challenge_results = user_stats.get_challenge_results(str(user.id))
@@ -45,7 +50,8 @@ class UserCog(commands.Cog):
         embed = discord.Embed(
                 title=f'Hizza Stats: {user_name}',
                 description=f'Discover your Hizza activity!',
-                color=discord.Colour.blurple()
+                # color=discord.Colour.blurple()
+                color=embed_colour
                 )
         
         embed.set_thumbnail(url=avatar_url)

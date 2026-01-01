@@ -39,9 +39,15 @@ class BalanceCog(commands.Cog):
         await ctx.defer()
         
         # Retrieve user info
-        avatar_url = user.avatar.url
-        user_name = user.name
-        hex_colour = f"#{user.color.value:06x}"
+        avatar_url = user.display_avatar.url
+        user_name = user.display_name
+        
+        if user.colour != discord.Colour.default():
+            hex_colour = f"#{user.colour.value:06x}"
+            embed_colour = user.colour
+        else:
+            hex_colour = "#3498db"
+            embed_colour = discord.Color.from_rgb(52, 152, 219)
         
         plt.figure(figsize=(10, 6), facecolor='none')
         ax = plt.gca()
@@ -104,7 +110,7 @@ class BalanceCog(commands.Cog):
         embed = discord.Embed(
                 title=f'Hizza Stats: {user_name}',
                 description=description,
-                color=discord.Colour.blurple()
+                color=embed_colour
                 )
 
         embed.set_thumbnail(url=avatar_url)
@@ -126,16 +132,14 @@ class BalanceCog(commands.Cog):
         ax = plt.gca()
 
         for user_id, l30d_balances in top5_balances.items():
-            if not l30d_balances:
-                continue
-
             dates = sorted(l30d_balances.keys())
             end_vals = [
                 int(l30d_balances[d]["end_balance"])
                 for d in dates
             ]
-
+            
             username = await fetch_username(self.bot, user_id)
+                
             plt.plot(dates, end_vals, linewidth=2, label=username)
 
         # Starts and ends x axis at correct dates

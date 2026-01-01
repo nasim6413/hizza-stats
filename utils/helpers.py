@@ -18,7 +18,7 @@ async def fetch_username(bot: discord.Bot, user_id):
     if not username:
             return "Nobody"
     else:
-            return username.name
+            return username.display_name
 
 def whiteify_plot(ax):
     ax.set_facecolor('none')

@@ -198,12 +198,12 @@ def get_roulette_results(user_id):
         (transactions['SenderDiscordId'] == user_id)
         ).sum()
 
-    roulette_results['TotalWon'] = transactions.loc[
+    roulette_biggest_reward_id = transactions.loc[
         (transactions['TransactionType'] == 4) &
         (transactions['SenderDiscordId'] == '0')
-        , 'Amount'
-        ].sum()
-
+        , 'Id'
+        ].max()
+    
     roulette_results['BiggestWin'] = transactions.loc[
         (transactions['TransactionType'] == 4) &
         (transactions['SenderDiscordId'] == '0')
@@ -223,6 +223,18 @@ def get_roulette_results(user_id):
         (transactions['Reward'].isna())
         , 'Amount'
     ].max()
+    
+    # Total won = total received by Hizza - total wagered + total lost
+    roulette_results['TotalWon'] = transactions.loc[
+        (transactions['TransactionType'] == 4) &
+        (transactions['SenderDiscordId'] == '0')
+        , 'Amount'
+        ].sum() - transactions.loc[
+            (transactions['TransactionType'] == 4) &
+            (transactions['SenderDiscordId'] == user_id) &
+            (transactions['Reward'].notna())
+            , 'Amount'
+        ].sum()
 
     # Win/Loss Ratio
     roulette_wins = (
