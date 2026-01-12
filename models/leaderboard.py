@@ -24,9 +24,8 @@ def get_economy_shares():
     
     top5_balances = balances.iloc[:5]
     
-    rest_balances = balances.iloc[6:]
+    rest_balances = balances.iloc[5:]
     total_economy = accounts['Balance'].sum()
-    
     
     economy_shares = {}
     for i, j in top5_balances.iterrows():
