@@ -17,7 +17,7 @@ async def on_ready():
     print('Hizza Stats is running!')
 
 # Load cogs
-cogs_list = ['stats', 'balance_history', 'economy']
+cogs_list = ['stats', 'balance_history', 'economy', 'next_destiny']
 
 for cog in cogs_list:
     bot.load_extension(f'cogs.{cog}')
