@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
-from models.next_destiny import next_insane_destiny
-
+from services.next_destiny import next_insane_destiny
 
 class DestinyCog(commands.Cog):
 

@@ -1,25 +1,10 @@
-import requests
 import pandas as pd
+from services.data import *
 
 def get_transaction_history(user_id):
-
-    transactions = requests.get('http://localhost:8080/api/transactions').json()
-    accounts = requests.get('http://localhost:8080/api/accounts').json()
     
-    transactions = pd.DataFrame([
-        t for t in transactions if 
-            (t['SenderDiscordId'] == user_id) or 
-            (t['ReceiverDiscordId'] == user_id)
-        ]
-    )
-    
+    transactions = get_transactions(user_id)    
     if not transactions.empty:
-        transactions['Date'] = pd.to_datetime(
-            transactions['Date'],
-            utc=True,
-            format='ISO8601'
-        ) 
-        
         transactions = (
             transactions
             .sort_values(by='Date', ascending=False)
@@ -30,8 +15,7 @@ def get_transaction_history(user_id):
         return None
     
     # Get current balance
-    account = pd.DataFrame([acc for acc in accounts if acc['DiscordId'] == user_id])
-    
+    account = get_accounts(user_id)
     current_balance = int(account['Balance'].iloc[0])
 
     l100_transactions = {}
@@ -69,29 +53,13 @@ def get_transaction_history(user_id):
 
 def get_historical_balance(user_id):
     
-    transactions = requests.get('http://localhost:8080/api/transactions').json()
-    accounts = requests.get('http://localhost:8080/api/accounts').json()
-    
-    transactions = pd.DataFrame([
-        t for t in transactions if 
-            (t['SenderDiscordId'] == user_id) or 
-            (t['ReceiverDiscordId'] == user_id)
-        ]
-    )
-    
-    if not transactions.empty:
-        transactions['Date'] = pd.to_datetime(
-            transactions['Date'],
-            utc=True,
-            format='ISO8601'
-        ) 
-    else:
+    transactions = get_transactions(user_id)
+    if transactions.empty:
         return None
     
-    # Get current balance
-    account = pd.DataFrame([acc for acc in accounts if acc['DiscordId'] == user_id])
-    
     today = pd.Timestamp.utcnow().normalize()
+    
+    account = get_accounts(user_id)
     current_balance = int(account['Balance'].iloc[0])
 
     l30d_balances = {}
@@ -169,3 +137,14 @@ def get_historical_balance(user_id):
         running_end_balance = start_balance
 
     return l30d_balances
+
+def get_top5_historical_balance():
+    accounts = get_accounts()
+
+    top5 = accounts.nlargest(5, 'Balance')['DiscordId'].values.tolist()
+    
+    top5_balances = {}
+    for user in top5:
+        top5_balances[user] = get_historical_balance(user)
+        
+    return top5_balances

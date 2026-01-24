@@ -5,7 +5,7 @@ import numpy as np
 import io
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 from discord.ext import commands
-from models import leaderboard
+from services import economy
 from utils.helpers import *
 
 class EconomyCog(commands.Cog):
@@ -21,7 +21,7 @@ class EconomyCog(commands.Cog):
         
         await ctx.defer()
     
-        economy_shares = leaderboard.get_economy_shares()
+        economy_shares = economy.get_economy_shares()
         
         # labels and sizes
         labels = list(economy_shares.keys())

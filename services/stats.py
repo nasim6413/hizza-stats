@@ -1,28 +1,11 @@
-import requests
 import pandas as pd
 from utils.enums import *
+from services.data import *
 
 def get_coin_results(user_id):
     """Get user statistics based on coin activity."""
     
-    # Import data and converting to pd
-    transactions = requests.get('http://localhost:8080/api/transactions').json()
-    
-    transactions = pd.DataFrame([
-        t for t in transactions if 
-            (t['SenderDiscordId'] == user_id) or 
-            (t['ReceiverDiscordId'] == user_id)
-        ]
-    )
-    
-    if not transactions.empty:
-        transactions['Date'] = pd.to_datetime(
-            transactions['Date'],
-            utc=True,
-            format='ISO8601'
-        ) 
-    else:
-        return None
+    transactions = get_transactions(user_id)
     
     # Getting coin results
     coin_results = {} 
@@ -61,22 +44,7 @@ def get_challenge_results(user_id):
     """Get user statistics based on challenges activity."""
     
     # Import data and converting to pd
-    challenges = requests.get('http://localhost:8080/api/challenges').json()
-    
-    challenges = pd.DataFrame([
-        c for c in challenges if 
-            (c['ChallengerDiscordId'] == user_id) or 
-            (c['ChallengedDiscordId'] == user_id)
-        ])
-    
-    if not challenges.empty:
-        challenges['Date'] = pd.to_datetime(
-            challenges['Date'],
-            utc=True,
-            format='ISO8601'
-        )
-    else:
-        return None
+    challenges = get_challenges(user_id)
     
     challenge_results = {}
     
@@ -145,51 +113,7 @@ def get_challenge_results(user_id):
 def get_roulette_results(user_id):
     """Returns user statistics based on roulette activity."""
     
-    # Import data and converting to pd
-    transactions = requests.get('http://localhost:8080/api/transactions').json()
-    roulettes = requests.get('http://localhost:8080/api/roulette').json()
-    
-    transactions = pd.DataFrame([
-        t for t in transactions if 
-            (t['SenderDiscordId'] == user_id) or 
-            (t['ReceiverDiscordId'] == user_id)
-        ]
-    )
-    
-    roulettes = pd.DataFrame([
-        r for r in roulettes
-    ]).drop(columns=['Id'])
-    
-    if not transactions.empty:
-        transactions['Date'] = pd.to_datetime(
-            transactions['Date'],
-            utc=True,
-            format='ISO8601'
-        ) 
-    else:
-        return None
-    
-    # Wager merge table
-    roulette_wagers = roulettes.rename(columns={
-        'WageredTransactionId': 'Id',
-        'RewardTransactionId': 'Reward',
-        'BetNumber': 'BetNumberWager',
-        'RolledNumber': 'RolledNumberWager',
-        'BetType': 'BetTypeWager'
-    })[['Id', 'Reward', 'BetNumberWager', 'RolledNumberWager', 'BetTypeWager']]
-    
-    # Transactions final merge
-    transactions = (
-        transactions
-        .merge(roulette_wagers, on='Id', how='left')
-    )
-    
-    if transactions.loc[
-        (transactions['TransactionType'] == 4) &
-        (transactions['SenderDiscordId'] == user_id)
-        , 'Amount'
-        ].sum() == 0:
-        return None
+    transactions = get_roulettes(user_id)
 
     roulette_results = {}
 

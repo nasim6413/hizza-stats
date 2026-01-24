@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from discord.commands import Option
-from models import user_stats
+from services import stats
 from utils.helpers import validate_user
 
 class UserCog(commands.Cog):
@@ -42,9 +42,9 @@ class UserCog(commands.Cog):
         else:
             embed_colour = discord.Color.from_rgb(52, 152, 219)
         
-        coin_results = user_stats.get_coin_results(str(user.id))
-        challenge_results = user_stats.get_challenge_results(str(user.id))
-        roulette_results = user_stats.get_roulette_results(str(user.id))
+        coin_results = stats.get_coin_results(str(user.id))
+        challenge_results = stats.get_challenge_results(str(user.id))
+        roulette_results = stats.get_roulette_results(str(user.id))
         
         # Creating embed
         embed = discord.Embed(
