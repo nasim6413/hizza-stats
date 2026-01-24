@@ -1,4 +1,4 @@
-FROM python:3.10.12
+FROM python:3.14.0
 
 WORKDIR /hizza-stats
 
