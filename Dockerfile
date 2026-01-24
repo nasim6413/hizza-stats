@@ -3,7 +3,7 @@ FROM python:3.10.12
 WORKDIR /hizza-stats
 
 COPY cogs cogs/
-COPY models models/
+COPY services services/
 COPY utils utils/
 COPY .env .
 COPY hizza-stats.py .
