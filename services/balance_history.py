@@ -3,12 +3,11 @@ from services.data import *
 
 def get_transaction_history(user_id):
     
-    transactions = get_transactions(user_id)    
+    transactions = get_roulettes(user_id)    
     if not transactions.empty:
         transactions = (
             transactions
             .sort_values(by='Date', ascending=False)
-            .iloc[:99]
         )
 
     else:
@@ -24,30 +23,46 @@ def get_transaction_history(user_id):
     count = 0
     l100_transactions[count] = running_balance # starting balance
 
-    for i, j in transactions.iterrows():
+    for i, j in transactions.iterrows():        
+        # Claims
         if j['TransactionType'] in (0, 1):
             running_balance -= j['Amount']
         
+        # Coin gives
         if j['TransactionType'] == 3 and j['SenderDiscordId'] == user_id:
             running_balance += j['Amount']
 
         if j['TransactionType'] == 3 and j['ReceiverDiscordId'] == user_id:
             running_balance -= j['Amount']
             
+        # Challenges
         if j['TransactionType'] == 2 and j['SenderDiscordId'] == user_id and j['ReceiverDiscordId'] != '0':
             running_balance += j['Amount']
             
         if j['TransactionType'] == 2 and j['ReceiverDiscordId'] == user_id:
             running_balance -= j['Amount']
 
+        # Roulettes (merge wagers and rewards)
         if j['TransactionType'] == 4 and j['SenderDiscordId'] == '0':
-            running_balance -= j['Amount']
-            
+            continue
+
         if j['TransactionType'] == 4 and j['SenderDiscordId'] == user_id:
+            
             running_balance += j['Amount']
 
+            if pd.notna(j['Reward']):
+                reward_amount = transactions.loc[
+                    transactions['Id'] == j['Reward'],
+                    'Amount'
+                ].iloc[0]
+
+                running_balance -= reward_amount
+    
         count += 1
         l100_transactions[count] = running_balance
+        
+        if count >= 100:
+            break
 
     return l100_transactions
 
@@ -75,7 +90,6 @@ def get_historical_balance(user_id):
             (transactions['Date'] >= day_start) &
             (transactions['Date'] < day_end)
         ]
-        
 
         coins_claimed = day_tx.loc[
             day_tx['TransactionType'].isin([0, 1]),

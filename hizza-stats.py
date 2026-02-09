@@ -1,16 +1,10 @@
 import os
 import discord
 from dotenv import load_dotenv
-import warnings
 
 load_dotenv()
 TOKEN = os.getenv('TOKEN')
 bot = discord.Bot()  
-
-warnings.filterwarnings(
-    "ignore",
-    message="Ignoring fixed y limits to fulfill fixed data aspect with adjustable data limits"
-)
 
 @bot.event
 async def on_ready():

@@ -148,7 +148,7 @@ def get_roulette_results(user_id):
         , 'Amount'
     ].max()
     
-    # Total won = total received by Hizza - total wagered + total lost
+    # Total won = total received by Hizza - total wagered
     roulette_results['TotalWon'] = transactions.loc[
         (transactions['TransactionType'] == 4) &
         (transactions['SenderDiscordId'] == '0')
