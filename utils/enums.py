@@ -26,3 +26,18 @@ CHALLENGE_STATES = {
     3 : 'Draw',
     4 : 'Expired'
 }
+
+DESTINY = {
+    1 : 'Small',
+    2 : 'Somewhat',
+    3 : 'Big',
+    4 : 'Very',
+    5 : 'Insane'
+}
+
+TOP_NUMBERS = {
+    45 : 4,
+    60 : 3,
+    70 : 2,
+    80 : 1
+}

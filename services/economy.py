@@ -9,10 +9,20 @@ def get_economy_shares():
     total_economy = accounts['Balance'].sum()
     balances['Share'] = round((balances['Balance'] / total_economy) * 100, 2)
     
-    top_number = 5
-    if balances.iloc[0]['Share'] >= 45:
-        top_number = 4
+    largest_share = balances.iloc[0]['Share']
     
+    # Balance pie chart if shares are too large
+    if largest_share >= 45:
+        top_number = 4
+    if largest_share >= 60:
+        top_number = 3
+    if largest_share >= 70:
+        top_number = 2
+    if largest_share >= 80:
+        top_number = 1
+    else:
+        top_number = 5
+        
     top_balances = balances.iloc[:top_number]
     rest_balances = balances.iloc[top_number:]
     
