@@ -3,9 +3,12 @@ from services.data import *
 
 def get_top_streaks():
     accounts = get_accounts()
-    
-    balances = accounts.sort_values(by='Streak', ascending=False)
-    balances = balances.iloc[:5] # Retrieves top 5
+
+    # Drop Hizza account
+    accounts = accounts.drop(accounts[accounts['DiscordId'] == "0"].index) 
+
+    accounts = accounts.sort_values(by='Streak', ascending=False)
+    accounts = accounts.iloc[:5] # Retrieves top 5
     
     data = {
         'users' : [],
@@ -13,7 +16,7 @@ def get_top_streaks():
         'claim_status' : []
     }
     
-    for i, row in balances.iterrows():
+    for i, row in accounts.iterrows():
         data['users'].append(row['DiscordId'])
         data['streak_num'].append(str(row['Streak']))
         
