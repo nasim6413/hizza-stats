@@ -6,6 +6,8 @@ def get_coin_results(user_id):
     """Get user statistics based on coin activity."""
     
     transactions = get_transactions(user_id)
+    if not transactions:
+        return False
     
     # Getting coin results
     coin_results = {} 
@@ -45,6 +47,8 @@ def get_challenge_results(user_id):
     
     # Import data and converting to pd
     challenges = get_challenges(user_id)
+    if not challenges:
+        return False
     
     challenge_results = {}
     
@@ -114,6 +118,8 @@ def get_roulette_results(user_id):
     """Returns user statistics based on roulette activity."""
     
     transactions = get_roulettes(user_id)
+    if not transactions:
+        return False
 
     roulette_results = {}
 

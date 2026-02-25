@@ -22,7 +22,7 @@ class BalanceCog(commands.Cog):
                       "Pick balance history mode",
                       choices=["l30days", "l100transactions"],
                       required=False,
-                      default="l30days"),
+                      default="l100transactions"),
         user = Option(discord.Member, 
                     "Pick a user", 
                     required=False,
