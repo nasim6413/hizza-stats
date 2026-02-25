@@ -6,6 +6,13 @@ def get_accounts(user_id = False):
     
     accounts = pd.DataFrame([acc for acc in accounts])
     
+    accounts['LastClaimDate'] = pd.to_datetime(
+        accounts['LastClaimDate'],
+        errors="coerce",
+        utc=True,
+        format='ISO8601'
+    )
+    
     if user_id:
         accounts = accounts.loc[accounts['DiscordId'] == user_id]
     

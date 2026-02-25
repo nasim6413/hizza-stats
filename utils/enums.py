@@ -29,10 +29,16 @@ CHALLENGE_STATES = {
 
 DESTINY = {
     1 : 'Small',
-    2 : 'Somewhat',
+    2 : 'Somewhat Big',
     3 : 'Big',
-    4 : 'Very',
+    4 : 'Very Big',
     5 : 'Insane'
+}
+
+STREAK_STATUS = {
+    1 : '🟢',
+    2 : '❗',
+    3 : '❌'
 }
 
 TOP_NUMBERS = {
