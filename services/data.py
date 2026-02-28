@@ -16,7 +16,7 @@ def get_accounts(user_id = False):
     if user_id:
         accounts = accounts.loc[accounts['DiscordId'] == user_id]
     
-    return accounts if not accounts.empty else False
+    return accounts
 
 def get_transactions(user_id = False):
     transactions = requests.get('http://localhost:8080/api/transactions').json()
@@ -36,7 +36,7 @@ def get_transactions(user_id = False):
             (transactions['SenderDiscordId'] == user_id) | (transactions['ReceiverDiscordId'] == user_id)
         ]
             
-    return transactions if not transactions.empty else False
+    return transactions
 
 def get_challenges(user_id = False):
     challenges = requests.get('http://localhost:8080/api/challenges').json()
@@ -57,7 +57,7 @@ def get_challenges(user_id = False):
             (challenges['ChallengedDiscordId'] == user_id)
         ]
 
-    return challenges if not challenges.empty else False
+    return challenges
 
 def get_roulettes(user_id = False):
     transactions = requests.get('http://localhost:8080/api/transactions').json()
@@ -92,4 +92,4 @@ def get_roulettes(user_id = False):
         ].sum() == 0:
         return None
     
-    return transactions if not transactions.empty else False
+    return transactions
