@@ -57,18 +57,30 @@ class BoardCog(commands.Cog):
                 f"""{i+1}. **{danger_board['users'][i]}**
                 \nDay `{danger_board['streak_num'][i]}`""")
         
+        if len(output) > 1:
+            output = "\n".join(output)
+        
         embed = discord.Embed(
             title=f'Streaks Danger Leaderboard',
             description=f'Users in danger of losing their streaks!'
         )
         
-        embed.add_field(
-            name='',
-            value=(
-                "\n".join(output)
+        if not output:
+            embed.add_field(
+                name='',
+                value=(
+                    f"All Hizza fans are safe!"
+                )
             )
-        )
-        
+            
+        else:
+            embed.add_field(
+                name='',
+                value=(
+                    output
+                )
+            )
+            
         await ctx.respond(embed=embed)
         
 def setup(bot):
