@@ -11,8 +11,9 @@ Displays given user's statistics based on Hizza activity (coin claim, challenges
 
 ### `/balancehistory user`
 Displays a line plot of the given user's balance history depending on `mode`. Current modes:
-- `l30days` (default): Balance at the end of day for the last 30 days (including today).
-- `l100transactions`: Balance after every transactions for the past 100 transactions (plus current balance).
+- `l100transactions` (default): Balance after every transactions for the past 100 transactions (plus current balance).
+- `l30days`: Balance at the end of day for the last 30 days (including today).
+
 
 <p align="center">
 <img src="screenshots/balancehistory_l30days.png" alt="BalanceHistory User Last30Days" width="370">
@@ -28,5 +29,12 @@ Displays a pie chart of the current biggest shares of the Hizza economy.
 <img src="screenshots/economy_pie.png" alt="Economy Pie" width="320">
 </p>
 
-### `/nextdestiny`
+### `/insanedestiny`
 Returns the date for the next insane destiny day.
+
+### `/tomorrow`
+Shows tomorrow's destiny.
+
+### `/leaderboard streaks`
+
+### `/leaderboard danger`
