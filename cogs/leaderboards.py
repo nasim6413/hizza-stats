@@ -69,7 +69,6 @@ class BoardCog(commands.Cog):
             )
         )
         
-        
         await ctx.respond(embed=embed)
         
 def setup(bot):

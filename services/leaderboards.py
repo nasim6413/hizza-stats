@@ -33,7 +33,7 @@ def get_top_streaks():
         
         if row['days_since_claim'] == 0:
             data['claim_status'].append(1)
-        elif row['days_since_claim'] in (1, 2):
+        elif row['days_since_claim'] in [1, 2]:
             data['claim_status'].append(2)
         elif row['days_since_claim'] > 2:
             data['claim_status'].append(3)
@@ -48,16 +48,16 @@ def get_in_danger():
 
     accounts = accounts.sort_values(by='Streak', ascending=False)
     
+    today = pd.Timestamp.utcnow().normalize()
+    accounts['days_since_claim'] = (today - accounts['LastClaimDate']).dt.days
+    
     data = {
         'users' : [],
         'streak_num' : []
     }
     
     for i, row in accounts.iterrows():
-        today = pd.Timestamp.utcnow().normalize()
-        days_since_claim = (today - row['LastClaimDate']).days
-        
-        if days_since_claim in (1, 2) and row['Streak'] > 30:
+        if row['days_since_claim'] in [1, 2] and row['Streak'] > 30:
             data['users'].append(row['DiscordId'])
             data['streak_num'].append(str(row['Streak']))
             
