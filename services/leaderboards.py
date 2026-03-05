@@ -83,16 +83,23 @@ def get_top_challenges():
         .drop_duplicates("DiscordId")
         .set_index("DiscordId")["Hand"]
     )
+    
+    # Total coins won
+    coin_won = (
+        challenges[challenges["Win"]]
+        .groupby("DiscordId")["Wager"]
+        .sum()
+    )
 
     # Leaderboard
     main = (
         challenges.groupby("DiscordId")
         .agg(
             Wins=("Win", "sum"),
-            Losses=("Loss", "sum"),
-            TotalWager=("Wager", "sum")
+            Losses=("Loss", "sum")
         )
         .join(best_hands.rename("BestHand"))
+        .join(coin_won.rename("CoinsWon"))
         .sort_values("Wins", ascending=False)
         .head(5) #Top 5
         .reset_index()
@@ -102,7 +109,7 @@ def get_top_challenges():
         "users": main["DiscordId"].tolist(),
         "win_num": main["Wins"].tolist(),
         "loss_num": main["Losses"].tolist(),
-        "coin_won": main["TotalWager"].tolist(),
+        "coin_won": main["CoinsWon"].tolist(),
         "best_hand": main["BestHand"].tolist()
     }
     

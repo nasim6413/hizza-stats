@@ -99,7 +99,7 @@ class BoardCog(commands.Cog):
         for i in range(len(challenges_board['users'])):
             output.append(
                 f"""{i+1}. **{challenges_board['users'][i]}**
-                \nWon `{challenges_board['win_num'][i]}` | `{challenges_board['coin_won'][i]}` HizzaCoin | Best: {challenges_board['best_hand'][i]} """)
+                \nWon `{challenges_board['win_num'][i]}` | `{round(challenges_board['coin_won'][i])}` HizzaCoin | Best: {challenges_board['best_hand'][i]} """)
             
         embed = discord.Embed(
             title=f'Challenges Leaderboard ⚔️',
