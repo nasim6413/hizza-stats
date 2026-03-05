@@ -19,6 +19,12 @@ CHALLENGE_HANDS = {
     3 : 'Scissors'
 }
 
+CHALLENGE_HANDS_EMOJI = {
+    1 : '🪨',
+    2 : '📰',
+    3 : '✂️'
+}
+
 CHALLENGE_STATES = {
     0 : 'In Progress',
     1 : 'Player One Win',

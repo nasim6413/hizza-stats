@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from services import leaderboards
-from utils.enums import STREAK_STATUS
+from utils.enums import STREAK_STATUS, CHALLENGE_HANDS_EMOJI
 from utils.helpers import fetch_username
 
 class BoardCog(commands.Cog):
@@ -80,6 +80,38 @@ class BoardCog(commands.Cog):
                     output
                 )
             )
+            
+        await ctx.respond(embed=embed)
+        
+    @board.command(description='Check the challenges leaderboard!')
+    async def challenges(self, ctx):
+        challenges_board = leaderboards.get_top_challenges()
+        
+        await ctx.defer()
+        
+        # Get usernames for ids
+        challenges_board['users'] = [await fetch_username(self.bot, user) for user in challenges_board['users']]
+        
+        # Get challenge hands
+        challenges_board['best_hand'] = [CHALLENGE_HANDS_EMOJI[i] for i in challenges_board['best_hand']]
+
+        output = []
+        for i in range(len(challenges_board['users'])):
+            output.append(
+                f"""{i+1}. **{challenges_board['users'][i]}**
+                \nWon `{challenges_board['win_num'][i]}` | `{challenges_board['coin_won'][i]}` HizzaCoin | Best: {challenges_board['best_hand'][i]} """)
+            
+        embed = discord.Embed(
+            title=f'Challenges Leaderboard ⚔️',
+            description=f'Top 5 winners at challenges!'
+        )
+        
+        embed.add_field(
+            name='',
+            value=(
+                "\n".join(output)
+            )
+        )
             
         await ctx.respond(embed=embed)
         

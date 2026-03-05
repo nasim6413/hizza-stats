@@ -56,7 +56,7 @@ def get_challenges(user_id = False):
             (challenges['ChallengerDiscordId'] == user_id) |
             (challenges['ChallengedDiscordId'] == user_id)
         ]
-
+        
     return challenges
 
 def get_roulettes(user_id = False):
